@@ -13,7 +13,7 @@ Working title is now locked: **Fridge Friends** (repo name: `fridge-friends`).
 | D1 | Stack: Vite + React 18 + TS strict + `motion` (npm pkg `motion`, imports from `motion/react`) + plain CSS. No Tailwind, no state lib, no router. | Brief stack; single screen needs no router; `useReducer`+context covers state. |
 | D2 | Drag = **`motion`'s built-in `drag` + pointer-up hit-test against the bench rect**. @dnd-kit is NOT installed. | One dep, springs/moods stay in the same animation system; hit-test is ~15 lines (`onDragEnd` → `info.point` inside `getBoundingClientRect()`). dnd-kit's transform model fights `layout` animations for zero benefit at this scale. |
 | D3 | Staples = **`salt`, `pepper`, `water`, `oil`** only. Flour & sugar are *stocked pantry items*, not assumed. | Tight exemption keeps matching honest (SuperCook parity) and makes pantry stocking meaningful. |
-| D4 | Corpus = **20 recipes: 8 Australian / 12 Asian; 55-entry ingredient registry (51 stockable + 4 staples)**. | Deliberate overlap: 7 core items in ≥5 recipes and 25/51 stockable items required by ≥2 recipes, so matches cascade; every item appears in ≥1 recipe (required or optional). |
+| D4 | Corpus = **20 recipes: 8 Australian / 12 Asian; 55-entry ingredient registry (51 stockable + 4 staples)**. | Deliberate overlap: 9 core items in ≥5 recipes and 24/51 stockable items required by ≥2 recipes, so matches cascade; every item appears in ≥1 recipe (required or optional). |
 | D5 | Optional ingredients never count as missing; they render as neutral "nice to have" chips. | Prevents topping/garnish items from blocking "can make now". |
 | D6 | Assets = parameterized SVG React components (react-kawaii architecture): one `KawaiiFace` + a body-path data registry. No raster ships. | Consistency is structural, assets are ~1 KB each, animate natively. |
 | D7 | Persistence = **yes**, versioned localStorage (`fridge-friends:v1`). | 15 lines, high perceived-product value. |
@@ -32,7 +32,7 @@ Working title is now locked: **Fridge Friends** (repo name: `fridge-friends`).
 
 `zone` = where the item lives. `cat` = category (`protein`, `dairy`, `produce`, `frozen`, `dry`, `condiment`, `staple`). Staples are never stocked in zones; they render in the staples ribbon.
 
-**Fridge (20)**
+**Fridge (21)**
 
 | id | name | cat | aliases |
 |---|---|---|---|
@@ -47,6 +47,7 @@ Working title is now locked: **Fridge Friends** (repo name: `fridge-friends`).
 | `milk` | Milk | dairy | full cream milk |
 | `butter` | Butter | dairy | unsalted butter |
 | `spring_onion` | Spring Onion | produce | scallion, green onion, shallots (au) |
+| `chilli` | Chilli | produce | red chilli, fresh chilli, birds eye chilli, chili |
 | `carrot` | Carrot | produce | carrots |
 | `capsicum` | Capsicum | produce | bell pepper, red pepper |
 | `tomato` | Tomato | produce | fresh tomato, tomatoes |
@@ -57,7 +58,7 @@ Working title is now locked: **Fridge Friends** (repo name: `fridge-friends`).
 | `kimchi` | Kimchi | produce | kimchee, napa kimchi |
 | `lemon` | Lemon | produce | lemons |
 
-**Pantry (26)**
+**Pantry (25)**
 
 | id | name | cat | aliases |
 |---|---|---|---|
@@ -68,18 +69,17 @@ Working title is now locked: **Fridge Friends** (repo name: `fridge-friends`).
 | `bread` | Bread | dry | bread roll, burger bun, white bread |
 | `tuna` | Canned Tuna | protein | tinned tuna, tuna can, canned tuna in oil |
 | `nori` | Nori | dry | seaweed, roasted seaweed, nori sheet |
-| `dashi` | Dashi Stock | dry | dashi powder, dashi granules, japanese stock |
 | `curry_roux` | Curry Roux | dry | japanese curry, curry blocks, golden curry |
+| `rice_noodles` | Rice Noodles | dry | flat rice noodles, ho fun, sen yai, rice sticks |
 | `sugar` | Sugar | dry | white sugar, caster sugar |
 | `soy_sauce` | Soy Sauce | condiment | shoyu, light soy |
 | `mirin` | Mirin | condiment | sweet rice wine, mirin seasoning |
-| `sake` | Sake | condiment | cooking sake, rice wine |
-| `miso_paste` | Miso Paste | condiment | miso, white miso, shiro miso |
+| `oyster_sauce` | Oyster Sauce | condiment | oyster flavoured sauce |
+| `kecap_manis` | Kecap Manis | condiment | sweet soy sauce, ketjap manis |
 | `gochujang` | Gochujang | condiment | korean chilli paste, gochu jang |
 | `sesame_oil` | Sesame Oil | condiment | toasted sesame oil |
 | `sesame_seeds` | Sesame Seeds | condiment | toasted sesame, sesame |
 | `kewpie_mayo` | Kewpie Mayo | condiment | japanese mayonnaise, kewpie, mayo |
-| `okonomi_sauce` | Okonomi Sauce | condiment | okonomiyaki sauce, tonkatsu sauce |
 | `ketchup` | Tomato Ketchup | condiment | tomato sauce, ketchup |
 | `passata` | Passata | condiment | tomato passata, crushed tomatoes, tomato puree |
 | `herbs` | Mixed Herbs | condiment | parsley, mixed herbs, dried herbs, italian herbs |
@@ -94,7 +94,7 @@ Working title is now locked: **Fridge Friends** (repo name: `fridge-friends`).
 |---|---|---|---|
 | `peas` | Frozen Peas | frozen | peas, green peas, garden peas |
 | `corn` | Corn Kernels | frozen | frozen corn, sweet corn |
-| `gyoza` | Frozen Gyoza | frozen | dumplings, frozen dumplings, potstickers |
+| `gyoza` | Frozen Dumplings | frozen | gyoza, dumplings, frozen dumplings, potstickers, jiaozi |
 | `puff_pastry` | Puff Pastry | frozen | pastry sheets, puff pastry sheets |
 | `chips` | Frozen Chips | frozen | fries, french fries, frozen fries |
 
@@ -124,36 +124,53 @@ Ingredients listed as `req` (required, non-staple) / `opt` (optional — never c
 | `bacon-egg-roll` | Bacon & Egg Roll | bread, bacon, egg, ketchup | tomato, cheese, butter |
 | `frittata` | Loaded Frittata | egg, potato, onion, spinach, cheese | bacon, corn, herbs, capsicum, tomato, mushroom |
 
-**Asian (12)**
+**Asian (12)** — 3 each: Japanese / Korean / Chinese / Southeast Asian (`region` field, §2.1)
+
+*Japanese*
+
+| id | name | req | opt |
+|---|---|---|---|
+| `teriyaki-chicken` | Teriyaki Chicken | chicken, soy_sauce, mirin, sugar, ginger, garlic, rice | spring_onion, sesame_seeds |
+| `chicken-katsu-curry` | Chicken Katsu Curry | chicken, panko, flour, egg, curry_roux, potato, carrot, onion, rice | spring_onion |
+| `onigiri` | Tuna Mayo Onigiri | rice, nori, tuna, kewpie_mayo | sesame_seeds |
+
+*Korean*
+
+| id | name | req | opt |
+|---|---|---|---|
+| `kimchi-fried-rice` | Kimchi Fried Rice | rice, kimchi, egg, spring_onion, gochujang, soy_sauce, sesame_oil | sesame_seeds, cheese, tofu |
+| `bulgogi-beef` | Bulgogi Beef Bowl | beef_sliced, onion, garlic, soy_sauce, sugar, sesame_oil, rice, spring_onion, mushroom | carrot, sesame_seeds, capsicum, spinach, gochujang, cabbage, kimchi |
+| `bibimbap` | Bibimbap | rice, egg, spinach, carrot, mushroom, gochujang, sesame_oil | beef_mince, beef_sliced, spring_onion, sesame_seeds, kimchi, tofu |
+
+*Chinese*
 
 | id | name | req | opt |
 |---|---|---|---|
 | `egg-fried-rice` | Egg Fried Rice | rice, egg, spring_onion, soy_sauce, sesame_oil | bacon, carrot, peas, corn, garlic |
-| `kimchi-fried-rice` | Kimchi Fried Rice | rice, kimchi, egg, spring_onion, gochujang, soy_sauce, sesame_oil | sesame_seeds, cheese, tofu |
-| `teriyaki-chicken` | Teriyaki Chicken | chicken, soy_sauce, mirin, sugar, ginger, garlic, rice | spring_onion, sesame_seeds, sake |
-| `gyudon` | Gyudon (Beef Bowl) | beef_sliced, onion, dashi, soy_sauce, mirin, sake, sugar, ginger, rice | egg, spring_onion, cabbage |
-| `omurice` | Omurice | rice, egg, chicken, onion, ketchup, butter | peas, corn, spring_onion |
-| `okonomiyaki` | Okonomiyaki | cabbage, flour, egg, dashi, bacon, okonomi_sauce, kewpie_mayo, spring_onion | nori, corn |
-| `tamagoyaki` | Tamagoyaki | egg, dashi, soy_sauce, sugar, mirin | nori |
-| `onigiri` | Tuna Mayo Onigiri | rice, nori, tuna, kewpie_mayo | sesame_seeds |
-| `miso-soup` | Miso Soup | dashi, miso_paste, tofu, spring_onion | spinach, mushroom |
-| `chicken-katsu-curry` | Chicken Katsu Curry | chicken, panko, flour, egg, curry_roux, potato, carrot, onion, rice | spring_onion |
-| `pan-fried-gyoza` | Pan-Fried Gyoza | gyoza, soy_sauce, sesame_oil, spring_onion | garlic, rice |
-| `bulgogi-beef` | Bulgogi Beef Bowl | beef_sliced, onion, garlic, soy_sauce, sugar, sesame_oil, rice, spring_onion, mushroom | carrot, sesame_seeds, capsicum, spinach, gochujang, cabbage, kimchi |
+| `pan-fried-dumplings` | Pan-Fried Dumplings (Guotie) | gyoza, soy_sauce, sesame_oil, spring_onion | garlic, chilli, rice |
+| `tomato-egg-stir-fry` | Tomato & Egg Stir-Fry | tomato, egg, spring_onion, sugar | garlic, rice |
+
+*Southeast Asian*
+
+| id | name | req | opt |
+|---|---|---|---|
+| `pad-see-ew` | Pad See Ew (Thai) | rice_noodles, chicken, egg, soy_sauce, oyster_sauce, sugar, garlic | chilli, carrot, cabbage |
+| `nasi-goreng` | Nasi Goreng (Indonesian) | rice, egg, kecap_manis, garlic, onion, chilli | chicken, spring_onion, tomato |
+| `chicken-banh-mi` | Chicken Bánh Mì (Vietnamese) | bread, chicken, carrot, kewpie_mayo, chilli, soy_sauce | spring_onion, herbs |
 
 ### 1.3 Coverage logic — why this corpus cascades
 
 Frequency (required uses; generated from §1.2 — keep in sync if recipes change):
 
-- **Core (≥5 recipes)**: egg 10 · onion 9 · rice 8 · soy_sauce 7 · spring_onion 6 · garlic 5 · chicken 5
-- **Hubs (3–4)**: carrot 4 · potato 4 · sesame_oil 4 · sugar 4 · dashi 4 · beef_mince 3 · flour 3 · butter 3 · mirin 3
-- **Bridge (2)**: herbs, passata, panko, cheese, ketchup, bacon, ginger, beef_sliced, kewpie_mayo
-- **Rare (1 required use)**: spaghetti, puff_pastry, milk, peas, pumpkin, lemon, steak, chips, bread, spinach, kimchi, gochujang, sake, cabbage, okonomi_sauce, tuna, nori, miso_paste, tofu, curry_roux, gyoza, mushroom
-- **Optional-only (0 required)**: capsicum, tomato, sesame_seeds, corn — they never gate a bucket but count via the optional-match tiebreak (§2.2), so adding them still visibly reorders the rail.
+- **Core (≥5 recipes)**: egg 11 · onion 8 · rice 8 · garlic 7 · soy_sauce 7 · carrot 6 · chicken 6 · sesame_oil 5 · spring_onion 5
+- **Hubs (3–4)**: potato 4 · sugar 4 · beef_mince 3
+- **Bridge (2)**: passata, herbs, flour, panko, cheese, butter, bread, spinach, kewpie_mayo, gochujang, mushroom, chilli
+- **Rare (1 required use)**: spaghetti, puff_pastry, milk, peas, pumpkin, lemon, chips, steak, ketchup, bacon, ginger, mirin, curry_roux, nori, tuna, kimchi, beef_sliced, gyoza, tomato, oyster_sauce, rice_noodles, kecap_manis
+- **Optional-only (0 required)**: tofu, capsicum, cabbage, sesame_seeds, corn — they never gate a bucket but count via the optional-match tiebreak (§2.2), so adding them still visibly reorders the rail.
 
-Invariant (vitest): every stockable id appears in ≥1 recipe (required or optional) — no dead assets. 25/51 stockable items are required by ≥2 recipes.
+Invariant (vitest): every stockable id appears in ≥1 recipe (required or optional) — no dead assets. 24/51 stockable items are required by ≥2 recipes.
 
-The rare tail is *intentional*: the IDF-weighted coverage (§2) makes grabbing kimchi or curry_roux do visible work, and every rare item still has ≥1 recipe so no asset is dead. Opt-outlets (bulgogi/kimchi-rice absorb kimchi, gochujang, tofu, spinach…) give rare items a second job as bonuses without gatekeeping matches.
+The rare tail is *intentional*: the IDF-weighted coverage (§2) makes grabbing kimchi or curry_roux do visible work, and every rare item still has ≥1 recipe so no asset is dead. Opt-outlets (bulgogi/bibimbap/kimchi-rice absorb kimchi, gochujang, tofu, beef…) give rare items a second job as bonuses without gatekeeping matches.
 
 ---
 
@@ -181,6 +198,7 @@ export interface Recipe {
   id: string;
   name: string;
   cuisine: 'australian' | 'asian';
+  region?: 'japanese' | 'korean' | 'chinese' | 'southeast-asian';   // asian only; shown as a flag chip on the card + rail filter
   ingredients: RecipeIngredient[];   // staples included where sensible; excluded from scoring
   blurb: string;                     // one cute line on the card
   steps: string[];                   // 3–5 short steps for the modal
@@ -236,8 +254,8 @@ export function rank(selected: Set<string>): RankedRecipe[] {
 
 **Worked example** — bench = `{rice, egg, spring_onion, kimchi, soy_sauce, sesame_oil}`:
 - `egg-fried-rice`: all 5 required present → `now`, coverage 1.00 → **#1** (and triggers the celebration).
-- `kimchi-fried-rice`: missing `{gochujang}` → `almost`, coverage ≈ 0.77 → **#2**; its missing chip is the "one more thing" nudge.
-- `pan-fried-gyoza`: missing `{gyoza}` → `almost`, coverage ≈ 0.60 → **#3**. Within `almost`, the rarer-ingredient match (kimchi) outranks the common-only match — the rare-ingredient preference the brief wanted, for free.
+- `kimchi-fried-rice`: missing `{gochujang}` → `almost`, coverage ≈ 0.81 → **#2**; its missing chip is the "one more thing" nudge.
+- `pan-fried-dumplings`: missing `{gyoza}` → `almost`, coverage ≈ 0.60 → **#3**. Within `almost`, the rarer-ingredient match (kimchi) outranks the common-only match — the rare-ingredient preference the brief wanted, for free.
 - (Numbers are generated from §1.2 — the vitest case asserts this exact top-3 order, not the decimals.)
 
 **Vitest cases (M2 gate):** empty set → all `later`; full pantry → all `now` & coverage 1; staples never in `missing`; optional ids never in `missing`; the kimchi example above (top-3 order); `resolve('chicken breast')` → `chicken`; every stockable id used by ≥1 recipe.
@@ -270,7 +288,7 @@ Canvas: **96×96 viewBox** for everything (dishes too). Light direction top-left
 
 ```tsx
 <KawaiiFood id="egg" mood="excited" size={64} />           // ingredient body + face
-<KawaiiDish id="omurice" size={120} />                     // dish asset (rail + modal)
+<KawaiiDish id="bibimbap" size={120} />                     // dish asset (rail + modal)
 <KawaiiFace mood="bliss" />                                // internal shared component
 ```
 
@@ -316,11 +334,11 @@ Group the 51 bodies into 6 shape-families so authoring stays mechanical and cons
 | family | members | construction |
 |---|---|---|
 | blob produce | egg, tomato, onion, garlic, lemon, potato, pumpkin | single rounded blob + stem/leaves (≤2 extra paths) |
-| leafy veg | carrot, capsicum, spinach, cabbage, mushroom, spring_onion, ginger, kimchi* | tapered/rounded body + leaf caps; kimchi = jar w/ red contents |
+| leafy veg | carrot, chilli, capsicum, spinach, cabbage, mushroom, spring_onion, ginger, kimchi* | tapered/rounded body + leaf caps; kimchi = jar w/ red contents |
 | cuts/protein | chicken(drumstick silhouette), beef_mince(scoop mound), beef_sliced(stacked sheets), steak, bacon(2 wavy strips), tuna(can), tofu(cube) | rounded slab + 1–2 marbling detail strokes |
 | dairy | cheese(wedge w/ holes), milk(carton), butter(block + wrapper flap) | rounded rect family + fold lines |
-| bottles/jars | soy_sauce, mirin, sake, kewpie_mayo, ketchup, okonomi_sauce, gochujang, miso_paste, passata, curry_roux(box), dashi(box), herbs(jar) | rounded rect + cap/label band (1–2 detail lines) |
-| pantry/frozen packs | rice(sack), spaghetti(bundle in band), flour(bag), panko(box), bread(loaf or roll), nori(pack w/ sheet), sugar(bag), + the 4 freezer bags | trapezoid/bundle + crimp or tie mark |
+| bottles/jars | soy_sauce, mirin, oyster_sauce, kecap_manis, kewpie_mayo, ketchup, gochujang, passata, curry_roux(box), herbs(jar) | rounded rect + cap/label band (1–2 detail lines) |
+| pantry/frozen packs | rice(sack), spaghetti(bundle in band), flour(bag), panko(box), bread(loaf or roll), nori(pack w/ sheet), rice_noodles(bundle in band), sugar(bag), + the 4 freezer bags | trapezoid/bundle + crimp or tie mark |
 
 **20 dish assets** (`dishes.ts`): uniform formula — plate/bowl ellipse (`dish` fill) + food mound + 2–3 garnish details + face on the mound; soups/noodle-adjacent add 2 steam wisps (animated `y`/`opacity` loop). Same 96 viewBox, slightly larger face scale allowed.
 
@@ -468,7 +486,7 @@ Browsers cap live WebGL contexts (~8–16), so per-chip `<Canvas>`es don't scale
 
 ### 8.3 Acceptance for the 3D track (else ship SVG-only)
 
-1. A `PlushFriend` of 4–5 representative foods (egg, carrot, soy_sauce, cheese wedge, gyoza) must look **as cute as the moodboard** — thick outline, blush, soft pastel toon shading. Screenshot A/B vs the SVG version in the report.
+1. A `PlushFriend` of 4–5 representative foods (egg, carrot, soy_sauce, cheese wedge, gyoza/dumpling) must look **as cute as the moodboard** — thick outline, blush, soft pastel toon shading. Screenshot A/B vs the SVG version in the report.
 2. ~12 live 3D chips (bench full) at 60 fps on this VM's Chrome using the single shared canvas; graceful degradation to SVG when `WebGL2` is unavailable or `webglcontextlost` fires (test by forcing the flag).
 3. `useReducedMotion()` flattens to static pose (no squash/breathing).
 4. If any of 1–3 fails: keep SVG-only, record the exploration + screenshots in the report (exploration outcome is still a deliverable).
