@@ -428,3 +428,44 @@ Deps: `react`, `react-dom`, `motion`, `canvas-confetti`; dev: `vite`, `typescrip
 | Sound? | Skip for PoC. | Autoplay plumbing not worth it now (D8). |
 | Recipe detail? | Minimal modal (asset, have/missing, 3–5 steps). | Steps data exists anyway; dead-end cards feel broken (D9). |
 | Name? | **Fridge Friends** (`fridge-friends`). | Alliterative, cute, covers all three zones loosely, domain-clear. |
+
+---
+
+## 8. Amendment (v2): Three.js characters — explore 3D-like chibi rendering
+
+**Change requested by the user (2026-09-30):** explore Three.js so the ingredient characters read as squishy *3D-like* chibi characters, not flat stickers — while keeping the moodboard's cuteness language (thick outline, pastel fills, dot-eye + tiny-smile + blush faces).
+
+| # | Decision | Why |
+|---|----------|-----|
+| D14 | Character rendering is a **two-track build**: `KawaiiFood` (SVG, §3) ships regardless as the shelf/fallback renderer; `PlushFriend` (Three.js) is explored for hero moments. | WebGL context caps (~8–16/page) forbid ~60 per-chip canvases, and SVG already covers a11y/reduced-motion/failure paths. |
+| D15 | Three.js via **`@react-three/fiber` + `@react-three/drei`** (adds to dep list — supersedes §6.1 "no additions"). | R3F is the React-idiomatic three layer; drei gives `Html`, soft shadows, `MeshToonMaterial`-adjacent helpers. |
+
+### 8.1 Where 3D is allowed (context budget)
+
+Browsers cap live WebGL contexts (~8–16). Budget: **≤ 8 canvases**.
+
+- **Recommended hybrid (primary exploration):** zones keep SVG shelf chips; the moment a chip is dragged or lands on the bench it becomes a `PlushFriend` — bench items (≤ ~10 expected; cap display if more) each get one small R3F `<Canvas>` (~96–120 px). Dragging swaps shelf-SVG → floating 3D plush under the pointer. Fallback if context-starved or WebGL unavailable: SVG everywhere (D6 unaffected).
+- **Alternative (if hybrid feels wrong):** ONE fullscreen `<Canvas>` behind the kitchen pane; 3D characters anchored to DOM rects via `drei/Html` projection. Fewer canvases but a harder layout-sync problem — only take this path if the hybrid underdelivers.
+- Rail cards, staples ribbon, modal art: always SVG (`KawaiiDish` etc.) — 3D is for the living characters, not chrome.
+
+### 8.2 `PlushFriend` look spec — keep the moodboard language
+
+- **Body**: one squashed sphere/capsule (`SphereGeometry` scaled, or `CapsuleGeometry`) per ingredient + 1–2 attachment meshes (leaves, wrapper, cap) — the same 6 shape-families as §3.5 drive silhouette; recognizability from shape+palette, faces carry the cute.
+- **Material**: `MeshToonMaterial` or lambert-style flat shading in §3.1 `FILL` colors; **outline via inverted-hull** (back-face scaled shell in `#3A2E2A`) to preserve the thick-outline look — non-negotiable, it's the moodboard's signature.
+- **Face**: canvas-generated texture decal (`CanvasTexture`) OR small dark meshes floating ~1 mm off the surface; same 7-mood vocabulary as `KawaiiFace` (share the mood union). Blush = pink oval decals.
+- **Squash & stretch is the whole point**: spring scale on land (`scale.y 1→0.72→1.08→1`), tilt with drag velocity (`rotation.z` ∝ `vx`), `motion` springs or `@react-spring/three` (only add if needed — `motion` can drive R3F props via `useFrame` reads).
+- **Lighting**: hemisphere + one soft directional; no environment maps — flat & cute, not realistic.
+- Idle: gentle breathing `scale ±0.015` + blink (eye-scale pulse) to mirror §3.3.
+
+### 8.3 Acceptance for the 3D track (else ship SVG-only)
+
+1. A `PlushFriend` of 4–5 representative foods (egg, carrot, soy_sauce, cheese wedge, gyoza) must look **as cute as the moodboard** — thick outline, blush, soft pastel toon shading. Screenshot A/B vs the SVG version in the report.
+2. ~12 live 3D chips (bench full) at 60 fps on this VM's Chrome; graceful degradation to SVG when `WebGL2` unavailable or context count exceeded.
+3. `useReducedMotion()` flattens to static pose (no squash/breathing).
+4. If any of 1–3 fails: keep SVG-only, record the exploration + screenshots in the report (exploration outcome is still a deliverable).
+
+### 8.4 Milestone impact
+
+- New **M5b — PlushFriend exploration** between M5 and M6: spike `PlushFriend` for the 5 acceptance foods + hybrid swap (shelf-SVG → bench-3D) + the 8.3 checks. *Gate: 8.3 verdict recorded.*
+- M6 scope unchanged (full SVG body set) — SVG is needed either way as shelf/fallback art.
+- New deps allowed: `@react-three/fiber`, `@react-three/drei`, `three` (+ `@types/three`).
