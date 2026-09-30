@@ -1,0 +1,6 @@
+body { margin: 0; background: #FFF6E9; font-family: system-ui, sans-serif; color: #3A2E2A; }
+.qa { padding: 24px; }
+.qa-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.qa-cell { margin: 0; display: flex; flex-direction: column; align-items: center; background: #fffdf8; border-radius: 16px; padding: 10px; box-shadow: 0 2px 0 #eadcc8; }
+.qa-cell figcaption { font-size: 11px; margin-top: 4px; opacity: .7; }
+.qa-row { display: flex; gap: 2px; }
