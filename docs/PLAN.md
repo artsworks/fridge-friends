@@ -13,7 +13,7 @@ Working title is now locked: **Fridge Friends** (repo name: `fridge-friends`).
 | D1 | Stack: Vite + React 18 + TS strict + `motion` (npm pkg `motion`, imports from `motion/react`) + plain CSS. No Tailwind, no state lib, no router. | Brief stack; single screen needs no router; `useReducer`+context covers state. |
 | D2 | Drag = **`motion`'s built-in `drag` + pointer-up hit-test against the bench rect**. @dnd-kit is NOT installed. | One dep, springs/moods stay in the same animation system; hit-test is ~15 lines (`onDragEnd` → `info.point` inside `getBoundingClientRect()`). dnd-kit's transform model fights `layout` animations for zero benefit at this scale. |
 | D3 | Staples = **`salt`, `pepper`, `water`, `oil`** only. Flour & sugar are *stocked pantry items*, not assumed. | Tight exemption keeps matching honest (SuperCook parity) and makes pantry stocking meaningful. |
-| D4 | Corpus = **20 recipes: 8 Australian / 12 Asian; 55-entry ingredient registry (51 stockable + 4 staples)**. | Deliberate overlap: 38/51 stockable items appear in ≥2 recipes so matches cascade. |
+| D4 | Corpus = **20 recipes: 8 Australian / 12 Asian; 55-entry ingredient registry (51 stockable + 4 staples)**. | Deliberate overlap: 7 core items in ≥5 recipes and 25/51 stockable items required by ≥2 recipes, so matches cascade; every item appears in ≥1 recipe (required or optional). |
 | D5 | Optional ingredients never count as missing; they render as neutral "nice to have" chips. | Prevents topping/garnish items from blocking "can make now". |
 | D6 | Assets = parameterized SVG React components (react-kawaii architecture): one `KawaiiFace` + a body-path data registry. No raster ships. | Consistency is structural, assets are ~1 KB each, animate natively. |
 | D7 | Persistence = **yes**, versioned localStorage (`fridge-friends:v1`). | 15 lines, high perceived-product value. |
@@ -117,18 +117,18 @@ Ingredients listed as `req` (required, non-staple) / `opt` (optional — never c
 |---|---|---|---|
 | `spaghetti-bolognese` | Spaghetti Bolognese | spaghetti, beef_mince, onion, garlic, carrot, passata, herbs | cheese |
 | `chicken-parmigiana` | Chicken Parmigiana | chicken, panko, flour, egg, passata, cheese | herbs |
-| `sausage-rolls` | Sausage Rolls | puff_pastry, beef_mince, onion, egg, ketchup | herbs |
-| `shepherds-pie` | Shepherd's Pie | beef_mince, onion, carrot, peas, potato, butter, milk, herbs | cheese |
+| `sausage-rolls` | Sausage Rolls | puff_pastry, beef_mince, onion, egg | herbs, ketchup |
+| `shepherds-pie` | Shepherd's Pie | beef_mince, onion, carrot, peas, potato, butter, milk | cheese, herbs |
 | `roast-chicken-veg` | Roast Chicken & Veg | chicken, potato, carrot, pumpkin, onion, garlic, lemon, herbs | peas |
 | `steak-and-chips` | Steak & Chips | steak, chips, butter, garlic | lemon, herbs |
-| `bacon-egg-roll` | Bacon & Egg Roll | bread, bacon, egg, cheese, ketchup, butter | tomato |
-| `frittata` | Loaded Frittata | egg, potato, onion, capsicum, tomato, mushroom, spinach, cheese | bacon, corn, herbs |
+| `bacon-egg-roll` | Bacon & Egg Roll | bread, bacon, egg, ketchup | tomato, cheese, butter |
+| `frittata` | Loaded Frittata | egg, potato, onion, spinach, cheese | bacon, corn, herbs, capsicum, tomato, mushroom |
 
 **Asian (12)**
 
 | id | name | req | opt |
 |---|---|---|---|
-| `egg-fried-rice` | Egg Fried Rice | rice, egg, spring_onion, carrot, peas, corn, garlic, soy_sauce, sesame_oil | bacon |
+| `egg-fried-rice` | Egg Fried Rice | rice, egg, spring_onion, soy_sauce, sesame_oil | bacon, carrot, peas, corn, garlic |
 | `kimchi-fried-rice` | Kimchi Fried Rice | rice, kimchi, egg, spring_onion, gochujang, soy_sauce, sesame_oil | sesame_seeds, cheese, tofu |
 | `teriyaki-chicken` | Teriyaki Chicken | chicken, soy_sauce, mirin, sugar, ginger, garlic, rice | spring_onion, sesame_seeds, sake |
 | `gyudon` | Gyudon (Beef Bowl) | beef_sliced, onion, dashi, soy_sauce, mirin, sake, sugar, ginger, rice | egg, spring_onion, cabbage |
@@ -139,16 +139,19 @@ Ingredients listed as `req` (required, non-staple) / `opt` (optional — never c
 | `miso-soup` | Miso Soup | dashi, miso_paste, tofu, spring_onion | spinach, mushroom |
 | `chicken-katsu-curry` | Chicken Katsu Curry | chicken, panko, flour, egg, curry_roux, potato, carrot, onion, rice | spring_onion |
 | `pan-fried-gyoza` | Pan-Fried Gyoza | gyoza, soy_sauce, sesame_oil, spring_onion | garlic, rice |
-| `bulgogi-beef` | Bulgogi Beef Bowl | beef_sliced, onion, garlic, soy_sauce, sugar, sesame_oil, rice, spring_onion, sesame_seeds, carrot, mushroom | capsicum, spinach, gochujang, cabbage, kimchi |
+| `bulgogi-beef` | Bulgogi Beef Bowl | beef_sliced, onion, garlic, soy_sauce, sugar, sesame_oil, rice, spring_onion, mushroom | carrot, sesame_seeds, capsicum, spinach, gochujang, cabbage, kimchi |
 
 ### 1.3 Coverage logic — why this corpus cascades
 
-Frequency (required uses, not counting optional):
+Frequency (required uses; generated from §1.2 — keep in sync if recipes change):
 
-- **Core (≥5 recipes)**: egg 10 · onion 9 · rice 8 · soy_sauce 7 · garlic 7 · spring_onion 8 · carrot 6
-- **Hubs (3–4)**: chicken 5 · potato 5 · butter 4 · dashi 4 · sugar 4 · sesame_oil 4 · peas 4 · beef_mince 3 · flour 3 · herbs 3 · ketchup 3 · cheese 3 · ginger 3 · mirin 3
-- **Bridge (2)**: beef_sliced, bacon, mushroom, passata, panko, kewpie_mayo, milk(1→see below), …
-- **Rare (1 required use)**: steak, tuna, gyoza, corn, cabbage, pumpkin, lemon, kimchi, nori, spaghetti, bread, puff_pastry, chips, curry_roux, sake, miso_paste, gochujang, sesame_seeds, okonomi_sauce, milk, capsicum, tomato, spinach
+- **Core (≥5 recipes)**: egg 10 · onion 9 · rice 8 · soy_sauce 7 · spring_onion 6 · garlic 5 · chicken 5
+- **Hubs (3–4)**: carrot 4 · potato 4 · sesame_oil 4 · sugar 4 · dashi 4 · beef_mince 3 · flour 3 · butter 3 · mirin 3
+- **Bridge (2)**: herbs, passata, panko, cheese, ketchup, bacon, ginger, beef_sliced, kewpie_mayo
+- **Rare (1 required use)**: spaghetti, puff_pastry, milk, peas, pumpkin, lemon, steak, chips, bread, spinach, kimchi, gochujang, sake, cabbage, okonomi_sauce, tuna, nori, miso_paste, tofu, curry_roux, gyoza, mushroom
+- **Optional-only (0 required)**: capsicum, tomato, sesame_seeds, corn — they never gate a bucket but count via the optional-match tiebreak (§2.2), so adding them still visibly reorders the rail.
+
+Invariant (vitest): every stockable id appears in ≥1 recipe (required or optional) — no dead assets. 25/51 stockable items are required by ≥2 recipes.
 
 The rare tail is *intentional*: the IDF-weighted coverage (§2) makes grabbing kimchi or curry_roux do visible work, and every rare item still has ≥1 recipe so no asset is dead. Opt-outlets (bulgogi/kimchi-rice absorb kimchi, gochujang, tofu, spinach…) give rare items a second job as bonuses without gatekeeping matches.
 
@@ -202,9 +205,11 @@ The brief's "coverage + missing-count + rare bonus" is folded into one principle
 ```ts
 const N = RECIPES.length;                                   // 20
 const df = new Map<string, number>();                       // required-use counts
-const idf = (id: string) => Math.log(1 + N / (df.get(id) ?? N)); // unseen ids ~ 0 weight
+const idf = (id: string) => Math.log(1 + N / (df.get(id) ?? N)); // only called on required ids, so df ≥ 1
 
 export function rank(selected: Set<string>): RankedRecipe[] {
+  const haveOptional = (x: RankedRecipe) =>
+    x.recipe.ingredients.filter(i => i.optional && selected.has(i.id)).length;
   return RECIPES.map(r => {
     const req  = r.ingredients.filter(i => !i.optional && !STAPLE_IDS.has(i.id)).map(i => i.id);
     const opt  = r.ingredients.filter(i =>  i.optional && !STAPLE_IDS.has(i.id)).map(i => i.id);
@@ -220,6 +225,7 @@ export function rank(selected: Set<string>): RankedRecipe[] {
     BUCKET_ORDER[a.bucket] - BUCKET_ORDER[b.bucket] ||
     b.coverage - a.coverage ||
     a.missing.length - b.missing.length ||
+    haveOptional(b) - haveOptional(a) ||   // optional matches = tiebreak, so optional-only items (corn, capsicum…) still visibly nudge rank
     a.recipe.name.localeCompare(b.recipe.name));
 }
 ```
@@ -229,11 +235,12 @@ export function rank(selected: Set<string>): RankedRecipe[] {
 - Empty selection → rail shows a friendly empty state, not 20 collapsed cards.
 
 **Worked example** — bench = `{rice, egg, spring_onion, kimchi, soy_sauce, sesame_oil}`:
-- `kimchi-fried-rice`: missing `{gochujang}` → `almost`, coverage ≈ 0.86 → ranks **#1** (kimchi's IDF is max).
-- `egg-fried-rice`: missing `{carrot, peas, corn, garlic}` → `later`.
-- Plain "rice + egg" set (common items only) ranks egg-fried-rice but *not* above kimchi-fried-rice here — the rare-ingredient preference the brief wanted, for free.
+- `egg-fried-rice`: all 5 required present → `now`, coverage 1.00 → **#1** (and triggers the celebration).
+- `kimchi-fried-rice`: missing `{gochujang}` → `almost`, coverage ≈ 0.77 → **#2**; its missing chip is the "one more thing" nudge.
+- `pan-fried-gyoza`: missing `{gyoza}` → `almost`, coverage ≈ 0.60 → **#3**. Within `almost`, the rarer-ingredient match (kimchi) outranks the common-only match — the rare-ingredient preference the brief wanted, for free.
+- (Numbers are generated from §1.2 — the vitest case asserts this exact top-3 order, not the decimals.)
 
-**Vitest cases (M2 gate):** empty set → all `later`; full pantry → all `now` & coverage 1; staples never in `missing`; optional ids never in `missing`; the kimchi example above; alias map resolves `chicken breast` → `chicken`.
+**Vitest cases (M2 gate):** empty set → all `later`; full pantry → all `now` & coverage 1; staples never in `missing`; optional ids never in `missing`; the kimchi example above (top-3 order); `resolve('chicken breast')` → `chicken`; every stockable id used by ≥1 recipe.
 
 ---
 
@@ -317,7 +324,7 @@ Group the 51 bodies into 6 shape-families so authoring stays mechanical and cons
 
 **20 dish assets** (`dishes.ts`): uniform formula — plate/bowl ellipse (`dish` fill) + food mound + 2–3 garnish details + face on the mound; soups/noodle-adjacent add 2 steam wisps (animated `y`/`opacity` loop). Same 96 viewBox, slightly larger face scale allowed.
 
-Authoring QA: a dev-only `/assets` route (M6) renders the full grid for a one-look consistency check — stroke weight, face anchor, palette discipline.
+Authoring QA: a dev-only asset gallery at `?assets` (query flag + `import.meta.env.DEV`; no router per D1) (M6) renders the full grid for a one-look consistency check — stroke weight, face anchor, palette discipline.
 
 ---
 
@@ -327,6 +334,7 @@ Authoring QA: a dev-only `/assets` route (M6) renders the full grid for a one-lo
 - Each zone is a cabinet card: **Fridge** (cool `#D9EDF7`, door rotates open on a hinge `transform-origin`, interior glow), **Pantry** (warm wood `#F5D9A8` shelf, lazy bob idle), **Freezer** (frosted glass slides up, frost particles, dwell mood `frost`).
 - One zone open at a time (all breakpoints — keeps the single-screen scan clean). Click/hover header toggles; opening another auto-closes the first (`AnimatePresence`).
 - Inside: grid of `IngredientChip`s in authored registry order.
+- Header search ("find an ingredient…") across all zones: resolves names **and aliases** via `lib/aliases.ts` (`resolve(query) → Ingredient[]`, case/space-insensitive, prefix match); Enter adds the top hit to the bench. This is the only consumer of `aliases` — the vitest alias case tests `resolve`.
 
 ### 4.2 Getting items to the bench
 - **Drag** (`motion` drag, `dragElastic={0.15}`, `whileDrag={{scale:1.12, rotate:4}}`, mood→`excited`): `onDragEnd` → `info.point` inside bench `getBoundingClientRect()` → add + land; else spring back with `shock` 300 ms → `idle`.
@@ -396,7 +404,7 @@ fridge-friends/
     components/RecipeRail.tsx  components/RecipeCard.tsx  components/MatchRing.tsx
     components/StaplesRibbon.tsx  components/Celebration.tsx
     components/RecipeModal.tsx          // minimal (D9)
-    components/AssetGallery.tsx         // dev-only /assets QA grid
+    components/AssetGallery.tsx         // dev-only ?assets QA grid
     styles/global.css
 ```
 
@@ -413,7 +421,7 @@ Deps: `react`, `react-dom`, `motion`, `canvas-confetti`; dev: `vite`, `typescrip
 3. **M3 — Zones & bench (no drag)**: cabinets open/close, tap-to-toss + keyboard add/remove, localStorage. *Gate: manual QA + reload persistence.*
 4. **M4 — Motion & moods**: drag + bench hit-test + squash/stretch + mood transitions + frost/shiver + reduced-motion. *Gate: drag works desktop + touch emulation.*
 5. **M5 — Recipe rail**: live rank, layout reorder, match ring, bucket accordion, chef's pick, celebration, modal, staples ribbon. *Gate: §2.2 example reproduces visually.*
-6. **M6 — Full asset pass**: 51 bodies (+4 shelf variants) + 20 dishes + 4 staple icons; `/assets` QA grid; fix anchors/palette until consistent. *Bulk of remaining time.*
+6. **M6 — Full asset pass**: 51 bodies (+4 shelf variants) + 20 dishes + 4 staple icons; `?assets` QA grid; fix anchors/palette until consistent. *Bulk of remaining time.*
 7. **M7 — Polish & ship**: mobile layout pass, a11y sweep (focus order, labels, reduced motion), README, final `typecheck+lint+test+build`.
 
 ---
@@ -442,10 +450,11 @@ Deps: `react`, `react-dom`, `motion`, `canvas-confetti`; dev: `vite`, `typescrip
 
 ### 8.1 Where 3D is allowed (context budget)
 
-Browsers cap live WebGL contexts (~8–16). Budget: **≤ 8 canvases**.
+Browsers cap live WebGL contexts (~8–16), so per-chip `<Canvas>`es don't scale to a full bench. Budget: **exactly 1 WebGL context**.
 
-- **Recommended hybrid (primary exploration):** zones keep SVG shelf chips; the moment a chip is dragged or lands on the bench it becomes a `PlushFriend` — bench items (≤ ~10 expected; cap display if more) each get one small R3F `<Canvas>` (~96–120 px). Dragging swaps shelf-SVG → floating 3D plush under the pointer. Fallback if context-starved or WebGL unavailable: SVG everywhere (D6 unaffected).
-- **Alternative (if hybrid feels wrong):** ONE fullscreen `<Canvas>` behind the kitchen pane; 3D characters anchored to DOM rects via `drei/Html` projection. Fewer canvases but a harder layout-sync problem — only take this path if the hybrid underdelivers.
+- **Architecture: one shared `<Canvas>` + drei `<View>`s.** A single fixed, full-viewport, `pointer-events: none` R3F `<Canvas>` renders every 3D character; each `BenchChip` renders a DOM `<View>` slot (drei scissors that rect of the shared canvas and follows the element's `getBoundingClientRect()` every frame). Layout animations, bench wrap/scroll, and the rail reorder stay pure DOM/`motion`; the 3D just tracks the boxes. One context total, regardless of bench size.
+- **Hybrid split:** zones keep SVG shelf chips (~51 items, cheap). A chip becomes a `PlushFriend` when it lands on the bench; during drag the dragged chip also gets a `<View>` so the plush floats under the pointer (drag stays on the DOM element — hit-test per §4.2 unchanged).
+- **Fallback:** no WebGL2 or context lost → `PlushFriend` renders `KawaiiFood` (SVG) in the same slot; D6 unaffected.
 - Rail cards, staples ribbon, modal art: always SVG (`KawaiiDish` etc.) — 3D is for the living characters, not chrome.
 
 ### 8.2 `PlushFriend` look spec — keep the moodboard language
@@ -460,7 +469,7 @@ Browsers cap live WebGL contexts (~8–16). Budget: **≤ 8 canvases**.
 ### 8.3 Acceptance for the 3D track (else ship SVG-only)
 
 1. A `PlushFriend` of 4–5 representative foods (egg, carrot, soy_sauce, cheese wedge, gyoza) must look **as cute as the moodboard** — thick outline, blush, soft pastel toon shading. Screenshot A/B vs the SVG version in the report.
-2. ~12 live 3D chips (bench full) at 60 fps on this VM's Chrome; graceful degradation to SVG when `WebGL2` unavailable or context count exceeded.
+2. ~12 live 3D chips (bench full) at 60 fps on this VM's Chrome using the single shared canvas; graceful degradation to SVG when `WebGL2` is unavailable or `webglcontextlost` fires (test by forcing the flag).
 3. `useReducedMotion()` flattens to static pose (no squash/breathing).
 4. If any of 1–3 fails: keep SVG-only, record the exploration + screenshots in the report (exploration outcome is still a deliverable).
 
