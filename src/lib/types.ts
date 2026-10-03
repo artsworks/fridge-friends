@@ -18,6 +18,8 @@ export interface RecipeIngredient {
   optional?: boolean;
 }
 
+export type CookTool = 'wok' | 'pan' | 'pot' | 'oven' | 'bowl';
+
 export interface Recipe {
   id: string;
   name: string;
@@ -27,6 +29,7 @@ export interface Recipe {
   blurb: string;
   steps: string[];
   dishAsset: string;
+  tool: CookTool;
 }
 
 export type Bucket = 'now' | 'almost' | 'later';

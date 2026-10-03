@@ -314,7 +314,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
-  .bench-list--high-five .bench-chip, .chef-hat { animation: none !important; }
+  .bench-list--high-five .bench-chip, .chef-hat, .cook * { animation: none !important; }
 }
 
 .effects-toggle { flex-shrink: 0; }
@@ -343,3 +343,36 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
   60% { translate: -50% 2px; opacity: 1; }
   to { translate: -50% 0; }
 }
+
+.cook-row { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 12px 0; }
+.cook-btn { font-size: 16px; padding: 8px 22px; }
+.cook { position: relative; width: 220px; height: 170px; }
+.cook-tool { position: absolute; left: 10px; bottom: 26px; }
+.cook-food { position: absolute; left: 0; right: 0; bottom: 70px; display: flex; justify-content: center; z-index: 1; }
+.cook-food > span { margin: 0 -5px; animation: cook-toss .7s ease-in-out calc(var(--i) * 60ms) 2 both; }
+.cook--pot .cook-food > span, .cook--oven .cook-food > span { animation: cook-drop .8s ease-in calc(var(--i) * 90ms) both; }
+.cook--oven .cook-food { bottom: 50px; }
+.cook--bowl .cook-food > span { animation: cook-land .5s ease-out calc(var(--i) * 80ms) both; }
+.cook-caption { position: absolute; bottom: 0; left: 0; right: 0; margin: 0; text-align: center; font-weight: 800; }
+.cook-flame { animation: cook-flicker .3s ease-in-out infinite alternate; }
+.cook-steam { animation: cook-rise 1.2s ease-out infinite; }
+.cook-glow { animation: cook-glow 1.2s ease-in-out .6s infinite alternate; }
+.app--lite .cook-food > span { animation: cook-land .35s ease-out both; }
+.app--lite .cook-flame, .app--lite .cook-steam, .app--lite .cook-glow { animation: none; }
+
+@keyframes cook-toss {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  50% { translate: 0 -64px; rotate: 180deg; }
+}
+@keyframes cook-drop {
+  from { translate: 0 -70px; opacity: 0; }
+  40% { opacity: 1; }
+  to { translate: 0 30px; scale: .6; opacity: 0; }
+}
+@keyframes cook-land {
+  from { translate: 0 -50px; opacity: 0; }
+  to { translate: 0 0; opacity: 1; }
+}
+@keyframes cook-flicker { to { opacity: .4; translate: 0 2px; } }
+@keyframes cook-rise { from { opacity: .9; translate: 0 0; } to { opacity: 0; translate: 0 -12px; } }
+@keyframes cook-glow { to { fill: #FF8A5C; } }
