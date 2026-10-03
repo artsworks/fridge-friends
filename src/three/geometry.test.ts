@@ -1,9 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { CapsuleGeometry, CylinderGeometry, LatheGeometry, SphereGeometry } from 'three';
-import { geometryFor, hullFor } from './geometry';
+import { STOCKABLE } from '../data/ingredients';
+import { geometryFor, hullFor, toonMaterial } from './geometry';
 import { PLUSH } from './plushSpecs';
 
 describe('plush geometry', () => {
+  it('has a 3D model for every stockable ingredient', () => {
+    expect(STOCKABLE.filter((ingredient) => !PLUSH[ingredient.id])).toEqual([]);
+  });
+
   it('uses the lower segment counts for small chips', () => {
     const sphere = geometryFor({ k: 'ball', s: [1, 1, 1] }) as SphereGeometry;
     expect(sphere.parameters.widthSegments).toBe(24);
@@ -22,6 +27,11 @@ describe('plush geometry', () => {
     const second = geometryFor({ k: 'ball', s: [1, 1, 1] });
     expect(first).toBe(second);
     expect(hullFor(first)).toBe(hullFor(second));
+  });
+
+  it('reuses toon materials for identical colors', () => {
+    expect(toonMaterial('#ffffff')).toBe(toonMaterial('#ffffff'));
+    expect(toonMaterial('#ffffff')).not.toBe(toonMaterial('#000000'));
   });
 
   it('keeps every model finite with lower segment counts', () => {

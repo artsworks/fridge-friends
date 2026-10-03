@@ -8,6 +8,7 @@ import {
   DataTexture,
   ExtrudeGeometry,
   LatheGeometry,
+  MeshToonMaterial,
   NearestFilter,
   RedFormat,
   Shape,
@@ -75,6 +76,17 @@ export function toonGradient(): DataTexture {
     toonRamp.needsUpdate = true;
   }
   return toonRamp;
+}
+
+const toons = new Map<string, MeshToonMaterial>();
+
+export function toonMaterial(color: string): MeshToonMaterial {
+  let material = toons.get(color);
+  if (!material) {
+    material = new MeshToonMaterial({ color, gradientMap: toonGradient() });
+    toons.set(color, material);
+  }
+  return material;
 }
 
 const hulls = new Map<BufferGeometry, BufferGeometry>();

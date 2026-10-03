@@ -1,11 +1,11 @@
-import { Decal, PerspectiveCamera } from '@react-three/drei';
+import { Decal } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import type { BufferGeometry, Group, MeshBasicMaterial } from 'three';
 import type { Mood } from '../lib/types';
 import { STROKE } from '../theme/tokens';
 import { faceTexture } from './faceTexture';
-import { geometryFor, hullFor, inkMaterial, toonGradient } from './geometry';
+import { geometryFor, hullFor, inkMaterial, toonMaterial } from './geometry';
 import { PLUSH, type PartSpec } from './plushSpecs';
 
 export interface PlushProps {
@@ -21,16 +21,14 @@ const OUTLINE = 0.058;
 const FACE_SCALE = 1.45;
 
 function Ink({ geo }: { geo: BufferGeometry }) {
-  return <mesh geometry={hullFor(geo)} material={inkMaterial(STROKE.color, OUTLINE)} />;
+  return <mesh geometry={hullFor(geo)} material={inkMaterial(STROKE.color, OUTLINE)} dispose={null} />;
 }
 
 function Part({ p }: { p: PartSpec }) {
   const geo = geometryFor(p.geo);
   return (
     <group position={p.pos} rotation={p.rot}>
-      <mesh geometry={geo}>
-        <meshToonMaterial color={p.color} gradientMap={toonGradient()} />
-      </mesh>
+      <mesh geometry={geo} material={toonMaterial(p.color)} dispose={null} />
       {!p.bare && <Ink geo={geo} />}
     </group>
   );
@@ -99,24 +97,12 @@ export function PlushFriend({ id, mood, landed = 0, reduce = false }: PlushProps
   return (
     <group ref={root}>
       <Ink geo={bodyGeo} />
-      <mesh geometry={bodyGeo}>
-        <meshToonMaterial color={body.color} gradientMap={toonGradient()} />
+      <mesh geometry={bodyGeo} material={toonMaterial(body.color)} dispose={null}>
         <Decal position={[0, face.y, face.z]} rotation={[0, 0, 0]} scale={[face.s * FACE_SCALE, face.s * FACE_SCALE, 0.6]}>
           <meshBasicMaterial ref={faceMat} map={tex} transparent polygonOffset polygonOffsetFactor={-4} depthWrite={false} toneMapped={false} />
         </Decal>
       </mesh>
       {spec.parts?.map((p, i) => <Part key={i} p={p} />)}
     </group>
-  );
-}
-
-export function PlushScene(props: PlushProps) {
-  return (
-    <>
-      <PerspectiveCamera makeDefault position={[0, 0.12, 5]} fov={29} />
-      <ambientLight intensity={1.75} />
-      <directionalLight position={[-2.5, 3.5, 5]} intensity={1.9} />
-      <PlushFriend {...props} />
-    </>
   );
 }

@@ -1,11 +1,26 @@
-import { Component, createContext, lazy, Suspense, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Component, createContext, lazy, Suspense, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import type { Mood } from '../lib/types';
 import { initialMode, type StageState } from './renderMode';
 
 const WebGLStage = lazy(() => import('./WebGLStage'));
 
 const StageCtx = createContext<StageState>({ mode: 'svg', reason: 'no provider' });
 
+export interface PlushRenderSlot {
+  key: string;
+  element: HTMLElement;
+  id: string;
+  mood: Mood;
+  size: number;
+  landed: number;
+  reduce: boolean;
+}
+
+type SetPlushSlot = (key: string, slot: PlushRenderSlot | null) => void;
+const PlushRegistryCtx = createContext<SetPlushSlot>(() => undefined);
+
 export const useStage = (): StageState => useContext(StageCtx);
+export const usePlushRegistry = (): SetPlushSlot => useContext(PlushRegistryCtx);
 
 const params = () => new URLSearchParams(window.location.search);
 
@@ -52,8 +67,7 @@ function FpsMeter() {
 }
 
 /**
- * One WebGL context for the whole app. Every 3D chip is a drei <View> that
- * scissors into this single fixed, click-through canvas.
+ * One fixed, click-through WebGL scene renders every registered 3D chip.
  */
 export function ThreeStage({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StageState>(initial);
@@ -61,14 +75,21 @@ export function ThreeStage({ children }: { children: ReactNode }) {
   const showFps = params().has('fps');
   const sharp = Math.min(2, Math.max(1.5, window.devicePixelRatio));
   const [dpr, setDpr] = useState(sharp);
+  const [slots, setSlots] = useState<PlushRenderSlot[]>([]);
+  const registry = useState(() => new Map<string, PlushRenderSlot>())[0];
+  const setPlushSlot = useCallback<SetPlushSlot>((key, slot) => {
+    if (slot) registry.set(key, slot);
+    else registry.delete(key);
+    setSlots([...registry.values()]);
+  }, [registry]);
 
   return (
     <StageCtx.Provider value={state}>
-      {children}
+      <PlushRegistryCtx.Provider value={setPlushSlot}>{children}</PlushRegistryCtx.Provider>
       {state.mode === '3d' && (
         <CanvasBoundary onFail={fallback}>
           <Suspense fallback={null}>
-            <WebGLStage dpr={dpr} sharp={sharp} setDpr={setDpr} fallback={fallback} loseContext={params().has('losecontext')} />
+            <WebGLStage dpr={dpr} sharp={sharp} setDpr={setDpr} fallback={fallback} loseContext={params().has('losecontext')} slots={slots} />
           </Suspense>
         </CanvasBoundary>
       )}
