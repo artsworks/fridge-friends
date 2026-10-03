@@ -51,7 +51,8 @@ npm run build      # vite build, output in dist/
 - `src/three` has the optional 3D PlushFriend. The default SVG mode does not load the WebGL renderer.
 - `?3d`, `?plush` and `?losecontext` load one R3F scene for all visible models. Missing WebGL2 or context loss returns chips to SVG.
 - Dragged chips always use SVG. Idle 3D chips update at 30fps, while excited chips update each frame.
-- The 3D canvas uses DPR 1 and demand rendering. Reduced-motion models render only after scene changes or scrolling.
+- The 3D canvas uses DPR 1. Idle frames skip rendering until 32ms have elapsed since the previous render.
+- Reduced-motion models use demand rendering only after scene changes or scrolling.
 - Models share merged geometry and materials. Each model uses one outline draw and one draw per body color, plus its face.
 - Model preparation runs across animation frames. SVG remains visible until each 3D model renders.
 - `src/state` has the reducer, context and persistence.

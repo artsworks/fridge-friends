@@ -14,32 +14,13 @@ interface Props {
   slots: PlushRenderSlot[];
 }
 
-function FrameScheduler({ slots }: Pick<Props, 'slots'>) {
+function ScrollInvalidation() {
   const invalidate = useThree((state) => state.invalidate);
-  const animated = slots.some((slot) => !slot.reduce);
-  const fullRate = slots.some((slot) => !slot.reduce && slot.mood === 'excited');
   useEffect(() => {
     const refresh = () => invalidate();
     window.addEventListener('scroll', refresh, { passive: true, capture: true });
-    if (!animated) {
-      return () => window.removeEventListener('scroll', refresh, { capture: true });
-    }
-
-    let frame = 0;
-    let last = 0;
-    const tick = (now: number) => {
-      if (fullRate || now - last >= 32) {
-        invalidate();
-        last = now;
-      }
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener('scroll', refresh, { capture: true });
-    };
-  }, [animated, fullRate, invalidate]);
+    return () => window.removeEventListener('scroll', refresh, { capture: true });
+  }, [invalidate]);
   return null;
 }
 
@@ -63,17 +44,23 @@ function PreparedPlushes({ slots }: Pick<Props, 'slots'>) {
   return slots.filter((slot) => prepared.has(slot.id)).map((slot) => <ScreenPlush key={slot.key} slot={slot} />);
 }
 
-function RenderMeter({ onRenderFps }: Pick<Props, 'onRenderFps'>) {
+function RenderLoop({ onRenderFps, slots }: Pick<Props, 'onRenderFps' | 'slots'>) {
   const sample = useRef({ frames: 0, start: performance.now() });
-  useFrame(() => {
+  const lastRender = useRef(-Infinity);
+  const animated = slots.some((slot) => !slot.reduce);
+  const fullRate = slots.some((slot) => !slot.reduce && slot.mood === 'excited');
+  useFrame(({ gl, scene, camera }) => {
     const now = performance.now();
+    if (animated && !fullRate && now - lastRender.current < 32) return;
+    lastRender.current = now;
+    gl.render(scene, camera);
     sample.current.frames++;
     const elapsed = now - sample.current.start;
     if (elapsed >= 1000) {
       onRenderFps(Math.round((sample.current.frames * 1000) / elapsed));
       sample.current = { frames: 0, start: now };
     }
-  });
+  }, 1);
   return null;
 }
 
@@ -126,15 +113,15 @@ export default function WebGLStage({ fallback, loseContext, onRenderFps, slots }
       style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 30 }}
       gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
       dpr={1}
-      frameloop="demand"
+      frameloop={slots.some((slot) => !slot.reduce) ? 'always' : 'demand'}
       orthographic
       camera={{ position: [0, 0, 100], near: 0.1, far: 200 }}
       flat
       onCreated={({ gl }) => gl.domElement.setAttribute('aria-hidden', 'true')}
     >
       <ContextLifecycle fallback={fallback} loseContext={loseContext} />
-      <FrameScheduler slots={slots} />
-      <RenderMeter onRenderFps={onRenderFps} />
+      <ScrollInvalidation />
+      <RenderLoop onRenderFps={onRenderFps} slots={slots} />
       <ambientLight intensity={1.75} />
       <directionalLight position={[-2.5, 3.5, 5]} intensity={1.9} />
       <PreparedPlushes slots={slots} />
