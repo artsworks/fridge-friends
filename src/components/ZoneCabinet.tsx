@@ -39,12 +39,13 @@ function Frost() {
 }
 
 export function ZoneCabinet({ zone, label, blurb }: Props) {
-  const { state, dispatch } = useKitchen();
+  const { state, dispatch, draggingId } = useKitchen();
   const reduce = useReducedMotion();
   const open = state.openZone === zone;
   const head = useRef<HTMLButtonElement>(null);
   const [frosty, setFrosty] = useState(false);
   const items = byZone(zone);
+  const dragging = items.some((ing) => ing.id === draggingId);
   const count = items.filter((i) => state.bench.includes(i.id)).length;
   const panelId = `zone-${zone}`;
 
@@ -66,7 +67,7 @@ export function ZoneCabinet({ zone, label, blurb }: Props) {
     <motion.section
       layout
       transition={SPRING}
-      className={`cabinet cabinet--${zone}${open ? ' is-open' : ''}`}
+      className={`cabinet cabinet--${zone}${open ? ' is-open' : ''}${dragging ? ' cabinet--dragging' : ''}`}
       aria-label={label}
     >
       <motion.button

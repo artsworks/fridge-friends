@@ -73,6 +73,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
   background: var(--paper); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column;
 }
 .cabinet.is-open { flex: 1 1 auto; overflow: visible; }
+.cabinet--dragging { z-index: 40; }
 .cabinet--fridge { background: #F4F9FF; }
 .cabinet--pantry { background: #FFF3DF; }
 .cabinet--freezer { background: var(--frost); }
