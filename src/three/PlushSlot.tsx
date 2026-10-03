@@ -1,10 +1,10 @@
-import { View } from '@react-three/drei';
 import { useReducedMotion } from 'motion/react';
+import { lazy, Suspense } from 'react';
 import { KawaiiFood } from '../assets/KawaiiFood';
 import type { Mood } from '../lib/types';
-import { PlushScene } from './PlushFriend';
-import { PLUSH } from './plushSpecs';
 import { useStage } from './Stage';
+
+const PlushView = lazy(() => import('./PlushView'));
 
 interface Props {
   id: string;
@@ -19,12 +19,11 @@ interface Props {
 export function PlushSlot({ id, mood, size, landed = 0, svg = false }: Props) {
   const { mode } = useStage();
   const reduce = useReducedMotion() ?? false;
-  if (svg || mode !== '3d' || !PLUSH[id]) return <KawaiiFood id={id} mood={mood} size={size} />;
+  const fallback = <KawaiiFood id={id} mood={mood} size={size} />;
+  if (svg || mode !== '3d') return fallback;
   return (
-    <span className="plush-slot" style={{ width: size, height: size }} aria-hidden>
-      <View className="plush-view" style={{ width: size * 1.2, height: size * 1.2 }}>
-        <PlushScene id={id} mood={mood} landed={landed} reduce={reduce} />
-      </View>
-    </span>
+    <Suspense fallback={fallback}>
+      <PlushView id={id} mood={mood} size={size} landed={landed} reduce={reduce} />
+    </Suspense>
   );
 }

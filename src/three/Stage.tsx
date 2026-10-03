@@ -1,14 +1,7 @@
-import { PerformanceMonitor, View } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
-import { Component, createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Component, createContext, lazy, Suspense, useContext, useEffect, useState, type ReactNode } from 'react';
+import { initialMode, type StageState } from './renderMode';
 
-export type RenderMode = '3d' | 'svg';
-
-interface StageState {
-  mode: RenderMode;
-  /** why we are on SVG, for the dev overlay and QA notes */
-  reason: string | null;
-}
+const WebGLStage = lazy(() => import('./WebGLStage'));
 
 const StageCtx = createContext<StageState>({ mode: 'svg', reason: 'no provider' });
 
@@ -17,9 +10,7 @@ export const useStage = (): StageState => useContext(StageCtx);
 const params = () => new URLSearchParams(window.location.search);
 
 function initial(): StageState {
-  if (params().has('svg')) return { mode: 'svg', reason: 'forced by ?svg' };
-  if (typeof WebGL2RenderingContext === 'undefined') return { mode: 'svg', reason: 'no WebGL2' };
-  return { mode: '3d', reason: null };
+  return initialMode(window.location.search, typeof WebGL2RenderingContext !== 'undefined');
 }
 
 class CanvasBoundary extends Component<{ onFail: (why: string) => void; children: ReactNode }, { failed: boolean }> {
@@ -76,28 +67,9 @@ export function ThreeStage({ children }: { children: ReactNode }) {
       {children}
       {state.mode === '3d' && (
         <CanvasBoundary onFail={fallback}>
-          <Canvas
-            className="three-stage"
-            style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 30 }}
-            gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-            dpr={dpr}
-            flat
-            onCreated={({ gl }) => {
-              const el = gl.domElement;
-              el.setAttribute('aria-hidden', 'true');
-              el.addEventListener('webglcontextlost', (e) => {
-                e.preventDefault();
-                fallback('webglcontextlost');
-              });
-              if (params().has('losecontext')) {
-                setTimeout(() => gl.getContext().getExtension('WEBGL_lose_context')?.loseContext(), 3000);
-              }
-            }}
-          >
-            <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(sharp)} flipflops={3} onFallback={() => setDpr(1)}>
-              <View.Port />
-            </PerformanceMonitor>
-          </Canvas>
+          <Suspense fallback={null}>
+            <WebGLStage dpr={dpr} sharp={sharp} setDpr={setDpr} fallback={fallback} loseContext={params().has('losecontext')} />
+          </Suspense>
         </CanvasBoundary>
       )}
       {showFps && (

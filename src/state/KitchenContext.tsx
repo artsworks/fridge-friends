@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useReducer, useRef, useState, type ReactNode } from 'react';
 import { load, save, type Persisted } from '../lib/persist';
 import type { Zone } from '../lib/types';
 
@@ -43,6 +43,8 @@ interface Ctx {
   flights: FlightLog;
   add: (id: string, from?: Element | DOMRect | null) => void;
   remove: (id: string, to?: Element | DOMRect | null) => void;
+  draggingId: string | null;
+  setDraggingId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const KitchenCtx = createContext<Ctx | null>(null);
@@ -52,6 +54,7 @@ const rectOf = (x?: Element | DOMRect | null) => (x ? (x instanceof DOMRect ? x 
 export function KitchenProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL, () => load() ?? INITIAL);
   const flights = useRef<FlightLog>({ launch: new Map(), home: new Map() }).current;
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   useEffect(() => save(state), [state]);
 
@@ -67,7 +70,7 @@ export function KitchenProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'remove', id });
   };
 
-  return <KitchenCtx.Provider value={{ state, dispatch, flights, add, remove }}>{children}</KitchenCtx.Provider>;
+  return <KitchenCtx.Provider value={{ state, dispatch, flights, add, remove, draggingId, setDraggingId }}>{children}</KitchenCtx.Provider>;
 }
 
 export function useKitchen(): Ctx {

@@ -8,7 +8,7 @@ import { BenchChip } from './BenchChip';
 const SLOTS = 10;
 
 export function Bench({ celebrating }: { celebrating: boolean }) {
-  const { state, dispatch } = useKitchen();
+  const { state, dispatch, draggingId } = useKitchen();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,14 +26,14 @@ export function Bench({ celebrating }: { celebrating: boolean }) {
         <h2 id="bench-title">
           Kitchen bench <span className="muted">({state.bench.length})</span>
         </h2>
-        <p className="muted bench-hint">Drag friends here, or tap them.</p>
+        <p className="muted bench-hint" role="status">{draggingId ? 'Drop your friend inside the highlighted bench.' : 'Drag friends here, or tap them.'}</p>
         {state.bench.length > 0 && (
           <button type="button" className="ghost-btn" onClick={() => dispatch({ type: 'clear' })}>
             Clear bench
           </button>
         )}
       </div>
-      <div ref={ref} className={`bench-top${state.bench.length ? '' : ' is-empty'}`}>
+      <div ref={ref} className={`bench-top${state.bench.length ? '' : ' is-empty'}${draggingId ? ' bench-top--drop-active' : ''}`}>
         <motion.ul layout className="bench-list" aria-live="polite">
           <AnimatePresence mode="popLayout">
             {state.bench.map((id) => {
