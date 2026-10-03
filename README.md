@@ -82,4 +82,4 @@ The renderer follows [R3F performance guidance](https://r3f.docs.pmnd.rs/advance
 [MDN WebGL best practices](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices).
 Verify a 120 FPS target on a hardware GPU with a 120 Hz display. A software-rendered 60 Hz browser cannot verify that target.
 
-The plan and art direction are in `docs/PLAN.md` and `docs/assets/art-direction/kawaii-moodboard.png`.
+The plan and art direction are in `design/PLAN.md` and `design/art-direction/kawaii-moodboard.png`.
