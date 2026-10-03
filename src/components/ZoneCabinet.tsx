@@ -138,9 +138,9 @@ export function ZoneCabinet({ zone, label, blurb }: Props) {
               <motion.div
                 className="freezer-glass"
                 aria-hidden
-                initial={{ y: '0%' }}
-                animate={{ y: '-105%' }}
-                transition={{ type: 'spring', stiffness: 140, damping: 20 }}
+                initial={{ y: '0%', opacity: 1 }}
+                animate={{ y: '-105%', opacity: 0 }}
+                transition={{ y: { type: 'spring', stiffness: 140, damping: 20 }, opacity: { delay: 0.3, duration: 0.2 } }}
               />
             )}
           </motion.div>
