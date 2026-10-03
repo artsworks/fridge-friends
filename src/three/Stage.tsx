@@ -71,10 +71,9 @@ function FpsMeter() {
  */
 export function ThreeStage({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StageState>(initial);
-  const fallback = (reason: string) => setState({ mode: 'svg', reason });
+  const fallback = useCallback((reason: string) => setState({ mode: 'svg', reason }), []);
   const showFps = params().has('fps');
-  const sharp = Math.min(2, Math.max(1.5, window.devicePixelRatio));
-  const [dpr, setDpr] = useState(sharp);
+  const [renderFps, setRenderFps] = useState(0);
   const [slots, setSlots] = useState<PlushRenderSlot[]>([]);
   const registry = useState(() => new Map<string, PlushRenderSlot>())[0];
   const setPlushSlot = useCallback<SetPlushSlot>((key, slot) => {
@@ -89,13 +88,13 @@ export function ThreeStage({ children }: { children: ReactNode }) {
       {state.mode === '3d' && (
         <CanvasBoundary onFail={fallback}>
           <Suspense fallback={null}>
-            <WebGLStage dpr={dpr} sharp={sharp} setDpr={setDpr} fallback={fallback} loseContext={params().has('losecontext')} slots={slots} />
+            <WebGLStage fallback={fallback} loseContext={params().has('losecontext')} onRenderFps={setRenderFps} slots={slots} />
           </Suspense>
         </CanvasBoundary>
       )}
       {showFps && (
         <div className="stage-debug">
-          <FpsMeter /> <span>dpr {dpr} · </span><span>{state.mode === '3d' ? '3D plush' : `SVG (${state.reason})`}</span>
+          {state.mode === '3d' ? <output className="fps" aria-live="off">{renderFps} render fps</output> : <FpsMeter />} <span>dpr {state.mode === '3d' ? 1 : window.devicePixelRatio} · </span><span>{state.mode === '3d' ? '3D plush' : `SVG (${state.reason})`}</span>
         </div>
       )}
     </StageCtx.Provider>

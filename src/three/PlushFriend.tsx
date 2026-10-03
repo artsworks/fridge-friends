@@ -1,12 +1,12 @@
-import { Decal } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import type { BufferGeometry, Group, MeshBasicMaterial } from 'three';
+import type { Group, MeshBasicMaterial } from 'three';
 import type { Mood } from '../lib/types';
 import { STROKE } from '../theme/tokens';
 import { faceTexture } from './faceTexture';
-import { geometryFor, hullFor, inkMaterial, toonMaterial } from './geometry';
-import { PLUSH, type PartSpec } from './plushSpecs';
+import { inkMaterial, toonMaterial } from './geometry';
+import { modelFor } from './plushModel';
+import { PLUSH } from './plushSpecs';
 
 export interface PlushProps {
   id: string;
@@ -17,23 +17,6 @@ export interface PlushProps {
 }
 
 const OUTLINE = 0.058;
-/** the face texture spans 64 SVG units; faces only use the middle ~44 */
-const FACE_SCALE = 1.45;
-
-function Ink({ geo }: { geo: BufferGeometry }) {
-  return <mesh geometry={hullFor(geo)} material={inkMaterial(STROKE.color, OUTLINE)} dispose={null} />;
-}
-
-function Part({ p }: { p: PartSpec }) {
-  const geo = geometryFor(p.geo);
-  return (
-    <group position={p.pos} rotation={p.rot}>
-      <mesh geometry={geo} material={toonMaterial(p.color)} dispose={null} />
-      {!p.bare && <Ink geo={geo} />}
-    </group>
-  );
-}
-
 export function PlushFriend({ id, mood, landed = 0, reduce = false }: PlushProps) {
   const spec = PLUSH[id];
   const root = useRef<Group>(null);
@@ -92,17 +75,16 @@ export function PlushFriend({ id, mood, landed = 0, reduce = false }: PlushProps
   });
 
   if (!spec) return null;
-  const { body, face } = spec;
-  const bodyGeo = geometryFor(body.geo);
+  const model = modelFor(spec);
   return (
     <group ref={root}>
-      <Ink geo={bodyGeo} />
-      <mesh geometry={bodyGeo} material={toonMaterial(body.color)} dispose={null}>
-        <Decal position={[0, face.y, face.z]} rotation={[0, 0, 0]} scale={[face.s * FACE_SCALE, face.s * FACE_SCALE, 0.6]}>
-          <meshBasicMaterial ref={faceMat} map={tex} transparent polygonOffset polygonOffsetFactor={-4} depthWrite={false} toneMapped={false} />
-        </Decal>
+      <mesh geometry={model.ink} material={inkMaterial(STROKE.color, OUTLINE)} dispose={null} />
+      {model.surfaces.map((surface) => (
+        <mesh key={surface.color} geometry={surface.geometry} material={toonMaterial(surface.color)} dispose={null} />
+      ))}
+      <mesh geometry={model.face}>
+        <meshBasicMaterial ref={faceMat} map={tex} transparent depthTest={false} depthWrite={false} toneMapped={false} />
       </mesh>
-      {spec.parts?.map((p, i) => <Part key={i} p={p} />)}
     </group>
   );
 }

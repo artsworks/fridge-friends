@@ -16,5 +16,9 @@ export default function PlushView({ size, ...props }: PlushProps & { size: numbe
   }, [key, props.id, props.landed, props.mood, props.reduce, setSlot, size]);
 
   if (!PLUSH[props.id]) return <KawaiiFood id={props.id} mood={props.mood} size={size} />;
-  return <span ref={element} className="plush-slot" style={{ width: size, height: size }} aria-hidden />;
+  return (
+    <span ref={element} className="plush-slot" style={{ width: size, height: size }} aria-hidden>
+      <KawaiiFood id={props.id} mood={props.mood} size={size} />
+    </span>
+  );
 }

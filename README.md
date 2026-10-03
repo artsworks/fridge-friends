@@ -51,12 +51,33 @@ npm run build      # vite build, output in dist/
 - `src/three` has the optional 3D PlushFriend. The default SVG mode does not load the WebGL renderer.
 - `?3d`, `?plush` and `?losecontext` load one R3F scene for all visible models. Missing WebGL2 or context loss returns chips to SVG.
 - Dragged chips always use SVG. Idle 3D chips update at 30fps, while excited chips update each frame.
+- The 3D canvas uses DPR 1 and demand rendering. Reduced-motion models render only after scene changes or scrolling.
+- Models share merged geometry and materials. Each model uses one outline draw and one draw per body color, plus its face.
+- Model preparation runs across animation frames. SVG remains visible until each 3D model renders.
+- `src/state` has the reducer, context and persistence.
 
 ## Compare rendering performance
 
 Open `?3d&fps&stress` and `?svg&fps&stress` on the same device and viewport. Both load 12 bench ingredients.
-Wait for the landing animations to finish before you compare frame rates. The overlay counts browser animation frames, not completed GPU renders.
+Wait for the landing animations to finish before you compare frame rates.
+The 3D overlay counts renderer submissions. The SVG overlay counts browser animation frames. Neither measures completed GPU renders.
+Idle 3D rendering targets 30 FPS. Excited models target the display refresh rate. Held shelf artwork uses SVG and does not increase that rate.
 Use browser performance traces to check frame times during drags. The `?plush` page compares the 3D models with their SVG versions.
-- `src/state` has the reducer, context and persistence.
+
+## Asset and resource budget
+
+Runtime artwork uses inline SVG and procedural geometry. There are no runtime raster images or font files to compress.
+Face textures use 128px canvases with anisotropy 2. Their pixel storage is one quarter of the previous 256px textures.
+The documentation mood board is not part of the production build.
+Vite keeps the WebGL bundle separate from the default SVG bundle. The deployment server must supply gzip or Brotli compression.
+
+Geometry, hulls, merged models, toon materials and face textures use page-lifetime caches bounded by the authored models, colors and moods.
+Individual face materials belong to their mesh and are disposed when the mesh unmounts.
+Animation frames, context-loss listeners and timers are canceled on cleanup. Canvas teardown releases the renderer and WebGL context.
+
+The renderer follows [R3F performance guidance](https://r3f.docs.pmnd.rs/advanced/scaling-performance),
+[Three.js resource cleanup guidance](https://threejs.org/manual/en/cleanup.html), and
+[MDN WebGL best practices](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices).
+Verify a 120 FPS target on a hardware GPU with a 120 Hz display. A software-rendered 60 Hz browser cannot verify that target.
 
 The plan and art direction are in `docs/PLAN.md` and `docs/assets/art-direction/kawaii-moodboard.png`.

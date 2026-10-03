@@ -12,7 +12,6 @@
   "license": "UNLICENSED",
   "description": "Fridge Friends: a kawaii what-can-I-make-tonight kitchen",
   "dependencies": {
-    "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
     "canvas-confetti": "^1.9.3",
     "motion": "^12.43.0",

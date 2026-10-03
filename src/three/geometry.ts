@@ -25,20 +25,20 @@ const cache = new Map<string, BufferGeometry>();
 function build(g: Geo): BufferGeometry {
   switch (g.k) {
     case 'ball': {
-      const geo = new SphereGeometry(1, 24, 16);
+      const geo = new SphereGeometry(1, 16, 12);
       geo.scale(g.s[0], g.s[1], g.s[2]);
       return geo;
     }
     case 'box':
-      return new RoundedBoxGeometry(g.s[0], g.s[1], g.s[2], 5, Math.min(g.r, g.s[0] / 2, g.s[1] / 2, g.s[2] / 2 - 0.001));
+      return new RoundedBoxGeometry(g.s[0], g.s[1], g.s[2], 3, Math.min(g.r, g.s[0] / 2, g.s[1] / 2, g.s[2] / 2 - 0.001));
     case 'lathe': {
-      const pts = new SplineCurve(g.pts.map(([r, y]) => new Vector2(r, y))).getPoints(24);
-      return new LatheGeometry(pts, 24);
+      const pts = new SplineCurve(g.pts.map(([r, y]) => new Vector2(r, y))).getPoints(16);
+      return new LatheGeometry(pts, 16);
     }
     case 'capsule':
-      return new CapsuleGeometry(g.r, g.len, 6, 16);
+      return new CapsuleGeometry(g.r, g.len, 4, 12);
     case 'cyl':
-      return new CylinderGeometry(g.rt, g.rb, g.h, 24, 1);
+      return new CylinderGeometry(g.rt, g.rb, g.h, 16, 1);
     case 'wedge': {
       const { w, h, d } = g;
       const bevel = 0.14;
@@ -48,7 +48,7 @@ function build(g: Geo): BufferGeometry {
       s.lineTo(w / 2 - bevel, -h / 2 + bevel + (h - 2 * bevel) * 0.35);
       s.lineTo(-w / 2 + bevel, h / 2 - bevel);
       s.closePath();
-      const geo = new ExtrudeGeometry(s, { depth: d - 2 * bevel, bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 6, curveSegments: 12 });
+      const geo = new ExtrudeGeometry(s, { depth: d - 2 * bevel, bevelEnabled: true, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 3, curveSegments: 6 });
       geo.translate(0, 0, -(d - 2 * bevel) / 2);
       geo.computeVertexNormals();
       return geo;

@@ -52,6 +52,9 @@ export function ZoneCabinet({ zone, label, blurb }: Props) {
   useEffect(() => {
     const el = head.current;
     if (el) anchors.zoneHeads.set(zone, el);
+    return () => {
+      if (anchors.zoneHeads.get(zone) === el) anchors.zoneHeads.delete(zone);
+    };
   }, [zone]);
 
   useEffect(() => {

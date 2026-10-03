@@ -1,22 +1,87 @@
-import { PerformanceMonitor } from '@react-three/drei';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Group } from 'three';
 import { PlushFriend } from './PlushFriend';
+import { PLUSH } from './plushSpecs';
+import { modelFor } from './plushModel';
 import { isOnscreen, plushPixelScale, screenPosition } from './screenLayout';
 import type { PlushRenderSlot } from './Stage';
 
 interface Props {
-  dpr: number;
-  sharp: number;
-  setDpr: (dpr: number) => void;
   fallback: (reason: string) => void;
   loseContext: boolean;
+  onRenderFps: (fps: number) => void;
   slots: PlushRenderSlot[];
+}
+
+function FrameScheduler({ slots }: Pick<Props, 'slots'>) {
+  const invalidate = useThree((state) => state.invalidate);
+  const animated = slots.some((slot) => !slot.reduce);
+  const fullRate = slots.some((slot) => !slot.reduce && slot.mood === 'excited');
+  useEffect(() => {
+    const refresh = () => invalidate();
+    window.addEventListener('scroll', refresh, { passive: true, capture: true });
+    if (!animated) {
+      return () => window.removeEventListener('scroll', refresh, { capture: true });
+    }
+
+    let frame = 0;
+    let last = 0;
+    const tick = (now: number) => {
+      if (fullRate || now - last >= 32) {
+        invalidate();
+        last = now;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', refresh, { capture: true });
+    };
+  }, [animated, fullRate, invalidate]);
+  return null;
+}
+
+function PreparedPlushes({ slots }: Pick<Props, 'slots'>) {
+  const ids = useMemo(() => [...new Set(slots.map((slot) => slot.id))], [slots]);
+  const [prepared, setPrepared] = useState<Set<string>>(() => new Set());
+  useEffect(() => {
+    const pending = ids.filter((id) => !prepared.has(id) && PLUSH[id]);
+    let frame = 0;
+    const prepareNext = () => {
+      const id = pending.shift();
+      const spec = id ? PLUSH[id] : undefined;
+      if (!id || !spec) return;
+      modelFor(spec);
+      setPrepared((current) => new Set(current).add(id));
+      if (pending.length) frame = requestAnimationFrame(prepareNext);
+    };
+    frame = requestAnimationFrame(prepareNext);
+    return () => cancelAnimationFrame(frame);
+  }, [ids, prepared]);
+  return slots.filter((slot) => prepared.has(slot.id)).map((slot) => <ScreenPlush key={slot.key} slot={slot} />);
+}
+
+function RenderMeter({ onRenderFps }: Pick<Props, 'onRenderFps'>) {
+  const sample = useRef({ frames: 0, start: performance.now() });
+  useFrame(() => {
+    const now = performance.now();
+    sample.current.frames++;
+    const elapsed = now - sample.current.start;
+    if (elapsed >= 1000) {
+      onRenderFps(Math.round((sample.current.frames * 1000) / elapsed));
+      sample.current = { frames: 0, start: now };
+    }
+  });
+  return null;
 }
 
 function ScreenPlush({ slot }: { slot: PlushRenderSlot }) {
   const group = useRef<Group>(null);
+  useEffect(() => () => {
+    delete slot.element.dataset.plushReady;
+  }, [slot.element]);
   useFrame(({ size }) => {
     const target = group.current;
     if (!target) return;
@@ -24,6 +89,7 @@ function ScreenPlush({ slot }: { slot: PlushRenderSlot }) {
     target.visible = isOnscreen(rect, size);
     if (!target.visible) return;
     target.position.set(...screenPosition(rect, size));
+    if (slot.element.dataset.plushReady !== 'true') slot.element.dataset.plushReady = 'true';
   });
   const scale = plushPixelScale(slot.size);
   return (
@@ -33,33 +99,45 @@ function ScreenPlush({ slot }: { slot: PlushRenderSlot }) {
   );
 }
 
-export default function WebGLStage({ dpr, sharp, setDpr, fallback, loseContext, slots }: Props) {
+function ContextLifecycle({ fallback, loseContext }: Pick<Props, 'fallback' | 'loseContext'>) {
+  const gl = useThree((state) => state.gl);
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const contextLost = (event: Event) => {
+      event.preventDefault();
+      fallback('webglcontextlost');
+    };
+    canvas.addEventListener('webglcontextlost', contextLost);
+    const timer = loseContext
+      ? window.setTimeout(() => gl.getContext().getExtension('WEBGL_lose_context')?.loseContext(), 3000)
+      : undefined;
+    return () => {
+      canvas.removeEventListener('webglcontextlost', contextLost);
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, [fallback, gl, loseContext]);
+  return null;
+}
+
+export default function WebGLStage({ fallback, loseContext, onRenderFps, slots }: Props) {
   return (
     <Canvas
       className="three-stage"
       style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 30 }}
       gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-      dpr={dpr}
+      dpr={1}
+      frameloop="demand"
       orthographic
       camera={{ position: [0, 0, 100], near: 0.1, far: 200 }}
       flat
-      onCreated={({ gl }) => {
-        const el = gl.domElement;
-        el.setAttribute('aria-hidden', 'true');
-        el.addEventListener('webglcontextlost', (e) => {
-          e.preventDefault();
-          fallback('webglcontextlost');
-        });
-        if (loseContext) {
-          setTimeout(() => gl.getContext().getExtension('WEBGL_lose_context')?.loseContext(), 3000);
-        }
-      }}
+      onCreated={({ gl }) => gl.domElement.setAttribute('aria-hidden', 'true')}
     >
-      <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(sharp)} flipflops={1} onFallback={() => setDpr(1)}>
-        <ambientLight intensity={1.75} />
-        <directionalLight position={[-2.5, 3.5, 5]} intensity={1.9} />
-        {slots.map((slot) => <ScreenPlush key={slot.key} slot={slot} />)}
-      </PerformanceMonitor>
+      <ContextLifecycle fallback={fallback} loseContext={loseContext} />
+      <FrameScheduler slots={slots} />
+      <RenderMeter onRenderFps={onRenderFps} />
+      <ambientLight intensity={1.75} />
+      <directionalLight position={[-2.5, 3.5, 5]} intensity={1.9} />
+      <PreparedPlushes slots={slots} />
     </Canvas>
   );
 }

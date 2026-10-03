@@ -173,6 +173,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
 }
 .bench-chip:hover .bench-x, .bench-chip:focus-visible .bench-x { opacity: 1; }
 .plush-slot { position: relative; display: inline-block; flex: none; }
+.plush-slot[data-plush-ready="true"] > svg { visibility: hidden; }
 .plush-view { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }
 
 .staples {

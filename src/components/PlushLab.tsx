@@ -12,7 +12,7 @@ export function PlushLab() {
     <ThreeStage>
       <main className="qa">
         <h1>PlushFriend A/B</h1>
-        <p className="muted">Left: 3D PlushFriend (one shared canvas, drei View per slot). Right: SVG twin.</p>
+        <p className="muted">The 3D models on the left share one scene. Their SVG twins are on the right.</p>
         <div className="ab-grid">
           {ACCEPTANCE.map((id) => (
             <figure key={id} className="ab-pair">
