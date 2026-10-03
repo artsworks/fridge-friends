@@ -7,7 +7,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:pages": "rm -rf docs/index.html docs/assets/*.js docs/assets/*.css && vite build --outDir docs --emptyOutDir false && touch docs/.nojekyll"
   },
   "license": "UNLICENSED",
   "description": "Fridge Friends: a kawaii what-can-I-make-tonight kitchen",
