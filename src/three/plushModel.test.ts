@@ -11,6 +11,10 @@ describe('merged plush models', () => {
     expect(gyoza.surfaces).toHaveLength(1);
     expect(gyoza.ink.getAttribute('position').count).toBeGreaterThan(0);
     expect(gyoza.face.getAttribute('position').count).toBeGreaterThan(0);
+    for (const geometry of [gyoza.ink, ...gyoza.surfaces.map((surface) => surface.geometry)]) {
+      expect(geometry.index).not.toBeNull();
+      expect(geometry.getAttribute('position').count).toBeLessThan((geometry.index?.count ?? 0) / 2);
+    }
   });
 
   it('creates finite merged geometry for every model', () => {

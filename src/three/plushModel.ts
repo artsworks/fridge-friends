@@ -1,6 +1,6 @@
 import { Euler, Matrix4, Mesh, Quaternion, Vector3, type BufferGeometry } from 'three';
 import { DecalGeometry } from 'three/examples/jsm/geometries/DecalGeometry.js';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { geometryFor, hullFor } from './geometry';
 import type { PartSpec, PlushSpec } from './plushSpecs';
 
@@ -36,7 +36,9 @@ function merged(geometries: BufferGeometry[]): BufferGeometry {
   const result = mergeGeometries(geometries, false);
   geometries.forEach((geometry) => geometry.dispose());
   if (!result) throw new Error('Could not merge plush geometry');
-  return result;
+  const indexed = mergeVertices(result);
+  result.dispose();
+  return indexed;
 }
 
 export function modelFor(spec: PlushSpec): PlushModelGeometry {
