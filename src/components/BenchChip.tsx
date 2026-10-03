@@ -55,10 +55,9 @@ export const BenchChip = forwardRef<HTMLLIElement, Props>(function BenchChip({ i
   useEffect(() => {
     if (!celebrating) return;
     setMood('excited');
-    if (!reduce) void controls.start({ y: [0, -18, 0, -8, 0], transition: { duration: 0.9, repeat: 1 } });
     const t = setTimeout(() => setMood('bliss'), 1500);
     return () => clearTimeout(t);
-  }, [celebrating, controls, reduce]);
+  }, [celebrating]);
 
   const back = () => {
     setMood('shock');

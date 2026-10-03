@@ -34,7 +34,7 @@ export function Bench({ celebrating }: { celebrating: boolean }) {
         )}
       </div>
       <div ref={ref} className={`bench-top${state.bench.length ? '' : ' is-empty'}${draggingId ? ' bench-top--drop-active' : ''}`}>
-        <motion.ul layout className="bench-list" aria-live="polite">
+        <motion.ul layout className={`bench-list${celebrating ? ' bench-list--high-five' : ''}`} aria-live="polite">
           <AnimatePresence mode="popLayout">
             {state.bench.map((id) => {
               const ing = BY_ID.get(id);

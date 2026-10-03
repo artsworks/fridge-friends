@@ -15,6 +15,5 @@ export type FillKey = keyof typeof FILL;
 
 export const FACE = { eye: '#3A2E2A', blush: '#F9A8B8', sparkle: '#FFD97D' } as const;
 
-export const CONFETTI_COLORS = ['#FF8A5C', '#FFC9D1', '#FFD97D', '#9BD3A0', '#BFE0F0', '#F9A8B8'];
 
 export const SPRING = { type: 'spring', stiffness: 350, damping: 30 } as const;

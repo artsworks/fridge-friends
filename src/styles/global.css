@@ -314,4 +314,32 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .bench-list--high-five .bench-chip, .chef-hat { animation: none !important; }
+}
+
+.effects-toggle { flex-shrink: 0; }
+.card-dish { position: relative; }
+.chef-hat { position: absolute; top: -16px; left: 50%; translate: -50% 0; z-index: 1; animation: hat-land .5s ease-out both; }
+.bench-list--high-five .bench-chip { animation: high-five-right .9s ease-in-out 2; }
+.bench-list--high-five .bench-item:nth-child(even) .bench-chip { animation-name: high-five-left; }
+.app--lite .bench-list--high-five .bench-chip { animation: hop .4s ease-out 1; }
+.app--lite .chef-hat { animation: none; }
+
+@keyframes high-five-right {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  35% { translate: 6px -18px; rotate: 10deg; }
+  55% { translate: 10px -6px; rotate: 14deg; }
+  75% { translate: 0 -8px; rotate: 0deg; }
+}
+@keyframes high-five-left {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  35% { translate: -6px -18px; rotate: -10deg; }
+  55% { translate: -10px -6px; rotate: -14deg; }
+  75% { translate: 0 -8px; rotate: 0deg; }
+}
+@keyframes hop { 50% { translate: 0 -10px; } }
+@keyframes hat-land {
+  from { translate: -50% -24px; opacity: 0; }
+  60% { translate: -50% 2px; opacity: 1; }
+  to { translate: -50% 0; }
 }
