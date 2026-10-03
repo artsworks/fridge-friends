@@ -1,11 +1,12 @@
 import { motion, useReducedMotion } from 'motion/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { KawaiiDish } from '../assets/KawaiiDish';
 import { KawaiiFood } from '../assets/KawaiiFood';
 import { STAPLE_IDS } from '../data/staples';
 import { nameOf } from '../data/ingredients';
 import type { RankedRecipe } from '../lib/types';
 import { useKitchen } from '../state/KitchenContext';
+import { CookScene } from './CookScene';
 import { MatchRing } from './MatchRing';
 import { RegionChip } from './RecipeCard';
 
@@ -14,6 +15,7 @@ export function RecipeModal({ r, onClose }: { r: RankedRecipe; onClose: () => vo
   const { add } = useKitchen();
   const dialog = useRef<HTMLDivElement>(null);
   const closeBtn = useRef<HTMLButtonElement>(null);
+  const [cooks, setCooks] = useState(0);
   const { recipe } = r;
   const staples = recipe.ingredients.filter((i) => STAPLE_IDS.has(i.id)).map((i) => i.id);
   const optional = recipe.ingredients.filter((i) => i.optional).map((i) => i.id);
@@ -70,6 +72,14 @@ export function RecipeModal({ r, onClose }: { r: RankedRecipe; onClose: () => vo
           </div>
           <MatchRing value={r.coverage} size={64} />
         </div>
+        {r.bucket === 'now' && (
+          <div className="cook-row">
+            <button type="button" className="cta cook-btn" onClick={() => setCooks((n) => n + 1)}>
+              Let's cook!
+            </button>
+            {cooks > 0 && <CookScene key={cooks} tool={recipe.tool} ids={r.have} />}
+          </div>
+        )}
         <div className="modal-cols">
           <section>
             <h3>You have</h3>

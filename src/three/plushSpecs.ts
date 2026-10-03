@@ -146,7 +146,7 @@ export const PLUSH: Record<string, PlushSpec> = {
   tofu: box(FILL.cream, [1.1, 0.95, 0.95], 0.2),
   milk: box(FILL.milk, [0.95, 1.3, 0.9], 0.18, [
     { geo: { k: 'box', s: [0.95, 0.4, 0.62], r: 0.12 }, color: FILL.milk, pos: [0, 0.78, 0] },
-    { geo: { k: 'cyl', rt: 0.12, rb: 0.12, h: 0.14 }, color: FILL.frost, pos: [0.22, 1.02, 0] },
+    { geo: { k: 'cyl', rt: 0.12, rb: 0.12, h: 0.14 }, color: FILL.frost, pos: [0.22, 1.02, 0], bare: true },
     { geo: { k: 'box', s: [0.97, 0.32, 0.92], r: 0.06 }, color: FILL.frost, pos: [0, -0.4, 0], bare: true },
   ], 0.05),
   butter: box(FILL.butter, [1.35, 0.6, 0.85], 0.2, [
@@ -186,8 +186,8 @@ export const PLUSH: Record<string, PlushSpec> = {
   ginger: lumpy(FILL.miso, [0.66, 0.46, 0.46], [[-0.55, 0.28, 0], [0.5, 0.3, -0.05]]),
   kimchi: jar(FILL.tomato, FILL.cream, 1.05),
   lemon: ball(FILL.cheese, [0.78, 0.6, 0.6], { y: 0, z: 0.6, s: 0.84 }, [
-    { geo: { k: 'ball', s: [0.12, 0.1, 0.1] }, color: FILL.cheese, pos: [-0.8, 0, 0] },
-    { geo: { k: 'ball', s: [0.12, 0.1, 0.1] }, color: FILL.cheese, pos: [0.8, 0, 0] },
+    { geo: { k: 'ball', s: [0.12, 0.1, 0.1] }, color: FILL.cheese, pos: [-0.8, 0, 0], bare: true },
+    { geo: { k: 'ball', s: [0.12, 0.1, 0.1] }, color: FILL.cheese, pos: [0.8, 0, 0], bare: true },
     leaf(0.12, 0.62, -1.1, FILL.leaf),
   ]),
 

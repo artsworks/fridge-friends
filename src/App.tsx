@@ -1,4 +1,4 @@
-import { AnimatePresence, MotionConfig, useReducedMotion } from 'motion/react';
+import { AnimatePresence, MotionConfig } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bench } from './components/Bench';
 import { RecipeModal } from './components/RecipeModal';
@@ -7,7 +7,7 @@ import { Search } from './components/Search';
 import { StaplesRibbon } from './components/StaplesRibbon';
 import { ZoneCabinet } from './components/ZoneCabinet';
 import { ZONES } from './data/ingredients';
-import { burst } from './lib/celebrate';
+import { setEffectsMode, useEffectsMode } from './lib/effects';
 import { rank } from './lib/match';
 import { KitchenProvider, useKitchen } from './state/KitchenContext';
 import { ThreeStage } from './three/Stage';
@@ -17,7 +17,7 @@ const STRESS = ['egg', 'carrot', 'soy_sauce', 'cheese', 'gyoza', 'rice', 'tomato
 
 function Kitchen() {
   const { state, dispatch } = useKitchen();
-  const reduce = useReducedMotion() ?? false;
+  const effects = useEffectsMode();
   const ranked = useMemo(() => rank(new Set(state.bench)), [state.bench]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());
@@ -34,7 +34,6 @@ function Kitchen() {
     celebrated.current = new Set(now);
     dispatch({ type: 'celebrated', ids: now });
     if (newOnes.length === 0) return;
-    burst(reduce);
     setFresh(new Set(newOnes));
     setCelebrating(true);
     const t = setTimeout(() => {
@@ -42,12 +41,12 @@ function Kitchen() {
       setFresh(new Set());
     }, 1500);
     return () => clearTimeout(t);
-  }, [ranked, reduce, dispatch]);
+  }, [ranked, dispatch]);
 
   const open = openId ? ranked.find((r) => r.recipe.id === openId) : undefined;
 
   return (
-    <div className="app">
+    <div className={`app app--${effects}`}>
       <header className="top">
         <h1 className="logo">
           <span aria-hidden className="logo-mark">
@@ -56,6 +55,14 @@ function Kitchen() {
           Fridge Friends
         </h1>
         <Search />
+        <button
+          type="button"
+          className="ghost-btn effects-toggle"
+          aria-pressed={effects === 'full'}
+          onClick={() => setEffectsMode(effects === 'full' ? 'lite' : 'full')}
+        >
+          {effects === 'full' ? 'Effects: full' : 'Effects: lite'}
+        </button>
       </header>
       <main className="layout">
         <div className="kitchen">
@@ -81,8 +88,9 @@ function Kitchen() {
 }
 
 export function App() {
+  const effects = useEffectsMode();
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion={effects === 'lite' ? 'always' : 'user'}>
       <KitchenProvider>
         <ThreeStage>
           <Kitchen />

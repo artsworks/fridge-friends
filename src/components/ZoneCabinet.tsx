@@ -39,18 +39,22 @@ function Frost() {
 }
 
 export function ZoneCabinet({ zone, label, blurb }: Props) {
-  const { state, dispatch } = useKitchen();
+  const { state, dispatch, draggingId } = useKitchen();
   const reduce = useReducedMotion();
   const open = state.openZone === zone;
   const head = useRef<HTMLButtonElement>(null);
   const [frosty, setFrosty] = useState(false);
   const items = byZone(zone);
+  const dragging = items.some((ing) => ing.id === draggingId);
   const count = items.filter((i) => state.bench.includes(i.id)).length;
   const panelId = `zone-${zone}`;
 
   useEffect(() => {
     const el = head.current;
     if (el) anchors.zoneHeads.set(zone, el);
+    return () => {
+      if (anchors.zoneHeads.get(zone) === el) anchors.zoneHeads.delete(zone);
+    };
   }, [zone]);
 
   useEffect(() => {
@@ -66,7 +70,7 @@ export function ZoneCabinet({ zone, label, blurb }: Props) {
     <motion.section
       layout
       transition={SPRING}
-      className={`cabinet cabinet--${zone}${open ? ' is-open' : ''}`}
+      className={`cabinet cabinet--${zone}${open ? ' is-open' : ''}${dragging ? ' cabinet--dragging' : ''}`}
       aria-label={label}
     >
       <motion.button
@@ -134,9 +138,9 @@ export function ZoneCabinet({ zone, label, blurb }: Props) {
               <motion.div
                 className="freezer-glass"
                 aria-hidden
-                initial={{ y: '0%' }}
-                animate={{ y: '-105%' }}
-                transition={{ type: 'spring', stiffness: 140, damping: 20 }}
+                initial={{ y: '0%', opacity: 1 }}
+                animate={{ y: '-105%', opacity: 0 }}
+                transition={{ y: { type: 'spring', stiffness: 140, damping: 20 }, opacity: { delay: 0.3, duration: 0.2 } }}
               />
             )}
           </motion.div>

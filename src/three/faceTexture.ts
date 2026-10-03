@@ -4,7 +4,8 @@ import { FACE, FILL } from '../theme/tokens';
 
 /** Same geometry as the SVG KawaiiFace, drawn with Path2D so 3D faces match the 2D ones. */
 const EX = 10;
-const SIZE = 256;
+export const FACE_TEXTURE_SIZE = 128;
+const SIZE = FACE_TEXTURE_SIZE;
 const K = SIZE / 64;
 
 type Tone = 'dark' | undefined;
@@ -136,7 +137,7 @@ export function faceTexture(mood: Mood | 'blink', tone: Tone): CanvasTexture {
   if (ctx) draw(ctx, mood, tone);
   const tex = new CanvasTexture(canvas);
   tex.colorSpace = SRGBColorSpace;
-  tex.anisotropy = 4;
+  tex.anisotropy = 2;
   cache.set(key, tex);
   return tex;
 }

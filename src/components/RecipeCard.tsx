@@ -43,6 +43,12 @@ export const RecipeCard = forwardRef<HTMLLIElement, Props>(function RecipeCard({
       <button type="button" className="card-btn" onClick={onOpen} aria-label={`${recipe.name}. ${status}. Open recipe`}>
         {pick && <span className="pick-badge">Chef's pick</span>}
         <span className="card-dish">
+          {fresh && (
+            <svg className="chef-hat" viewBox="0 0 32 28" width="30" height="26" aria-hidden>
+              <path d="M8 18c-4 0-6-3-6-6s3-6 6-5c1-4 4-6 8-6s7 2 8 6c3-1 6 2 6 5s-2 6-6 6z" fill="#fff" stroke="#3A2E2A" strokeWidth="2.5" strokeLinejoin="round" />
+              <rect x="8" y="18" width="16" height="7" rx="2" fill="#fff" stroke="#3A2E2A" strokeWidth="2.5" />
+            </svg>
+          )}
           <KawaiiDish id={recipe.dishAsset} size={64} mood={bucket === 'now' ? 'bliss' : bucket === 'almost' ? 'happy' : 'idle'} />
         </span>
         <span className="card-body">

@@ -1,25 +1,31 @@
-import { PerformanceMonitor, View } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
-import { Component, createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Component, createContext, lazy, Suspense, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import type { Mood } from '../lib/types';
+import { initialMode, type StageState } from './renderMode';
 
-export type RenderMode = '3d' | 'svg';
-
-interface StageState {
-  mode: RenderMode;
-  /** why we are on SVG, for the dev overlay and QA notes */
-  reason: string | null;
-}
+const WebGLStage = lazy(() => import('./WebGLStage'));
 
 const StageCtx = createContext<StageState>({ mode: 'svg', reason: 'no provider' });
 
+export interface PlushRenderSlot {
+  key: string;
+  element: HTMLElement;
+  id: string;
+  mood: Mood;
+  size: number;
+  landed: number;
+  reduce: boolean;
+}
+
+type SetPlushSlot = (key: string, slot: PlushRenderSlot | null) => void;
+const PlushRegistryCtx = createContext<SetPlushSlot>(() => undefined);
+
 export const useStage = (): StageState => useContext(StageCtx);
+export const usePlushRegistry = (): SetPlushSlot => useContext(PlushRegistryCtx);
 
 const params = () => new URLSearchParams(window.location.search);
 
 function initial(): StageState {
-  if (params().has('svg')) return { mode: 'svg', reason: 'forced by ?svg' };
-  if (typeof WebGL2RenderingContext === 'undefined') return { mode: 'svg', reason: 'no WebGL2' };
-  return { mode: '3d', reason: null };
+  return initialMode(window.location.search, typeof WebGL2RenderingContext !== 'undefined');
 }
 
 class CanvasBoundary extends Component<{ onFail: (why: string) => void; children: ReactNode }, { failed: boolean }> {
@@ -61,48 +67,34 @@ function FpsMeter() {
 }
 
 /**
- * One WebGL context for the whole app. Every 3D chip is a drei <View> that
- * scissors into this single fixed, click-through canvas.
+ * One fixed, click-through WebGL scene renders every registered 3D chip.
  */
 export function ThreeStage({ children }: { children: ReactNode }) {
   const [state, setState] = useState<StageState>(initial);
-  const fallback = (reason: string) => setState({ mode: 'svg', reason });
+  const fallback = useCallback((reason: string) => setState({ mode: 'svg', reason }), []);
   const showFps = params().has('fps');
-  const sharp = Math.min(2, Math.max(1.5, window.devicePixelRatio));
-  const [dpr, setDpr] = useState(sharp);
+  const [renderFps, setRenderFps] = useState(0);
+  const [slots, setSlots] = useState<PlushRenderSlot[]>([]);
+  const registry = useState(() => new Map<string, PlushRenderSlot>())[0];
+  const setPlushSlot = useCallback<SetPlushSlot>((key, slot) => {
+    if (slot) registry.set(key, slot);
+    else registry.delete(key);
+    setSlots([...registry.values()]);
+  }, [registry]);
 
   return (
     <StageCtx.Provider value={state}>
-      {children}
+      <PlushRegistryCtx.Provider value={setPlushSlot}>{children}</PlushRegistryCtx.Provider>
       {state.mode === '3d' && (
         <CanvasBoundary onFail={fallback}>
-          <Canvas
-            className="three-stage"
-            style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 30 }}
-            gl={{ antialias: false, alpha: true, powerPreference: 'high-performance' }}
-            dpr={dpr}
-            flat
-            onCreated={({ gl }) => {
-              const el = gl.domElement;
-              el.setAttribute('aria-hidden', 'true');
-              el.addEventListener('webglcontextlost', (e) => {
-                e.preventDefault();
-                fallback('webglcontextlost');
-              });
-              if (params().has('losecontext')) {
-                setTimeout(() => gl.getContext().getExtension('WEBGL_lose_context')?.loseContext(), 3000);
-              }
-            }}
-          >
-            <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(sharp)} flipflops={3} onFallback={() => setDpr(1)}>
-              <View.Port />
-            </PerformanceMonitor>
-          </Canvas>
+          <Suspense fallback={null}>
+            <WebGLStage fallback={fallback} loseContext={params().has('losecontext')} onRenderFps={setRenderFps} slots={slots} />
+          </Suspense>
         </CanvasBoundary>
       )}
       {showFps && (
         <div className="stage-debug">
-          <FpsMeter /> <span>dpr {dpr} · </span><span>{state.mode === '3d' ? '3D plush' : `SVG (${state.reason})`}</span>
+          {state.mode === '3d' ? <output className="fps" aria-live="off">{renderFps} render fps</output> : <FpsMeter />} <span>dpr {state.mode === '3d' ? 1 : window.devicePixelRatio} · </span><span>{state.mode === '3d' ? '3D plush' : `SVG (${state.reason})`}</span>
         </div>
       )}
     </StageCtx.Provider>

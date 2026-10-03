@@ -73,6 +73,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
   background: var(--paper); box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column;
 }
 .cabinet.is-open { flex: 1 1 auto; overflow: visible; }
+.cabinet--dragging { z-index: 40; }
 .cabinet--fridge { background: #F4F9FF; }
 .cabinet--pantry { background: #FFF3DF; }
 .cabinet--freezer { background: var(--frost); }
@@ -124,6 +125,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
   touch-action: none; -webkit-tap-highlight-color: transparent;
 }
 .chip:hover { background: rgba(255, 201, 209, .35); }
+.chip:not(.chip--dragging):active { scale: .94; }
 .chip--dragging { cursor: grabbing; }
 .chip--picked { opacity: .55; cursor: pointer; }
 .chip--picked:hover { opacity: .8; }
@@ -148,7 +150,11 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
   background: repeating-linear-gradient(90deg, #FFF8EC 0 46px, #FFF3E1 46px 92px);
   border: 3px solid var(--ink); box-shadow: inset 0 -6px 0 rgba(58, 46, 42, .06);
 }
-.bench-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.bench-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; }
+.bench-top--drop-active {
+  border-style: dashed; border-color: var(--leaf-dark); background: #EDF9E8;
+  box-shadow: inset 0 0 0 3px rgba(63, 143, 74, .2);
+}
 .bench-item { position: relative; }
 .bench-slot { width: 88px; height: 100px; border-radius: 16px; border: 2.5px dashed #E4CFB2; }
 .bench-top:not(.is-empty) .bench-slot { display: none; }
@@ -161,6 +167,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
   background: transparent; border: 0; border-radius: 16px; cursor: pointer;
 }
 .bench-chip:hover { background: rgba(255, 255, 255, .6); }
+.bench-chip:active { scale: .92; }
 .bench-x {
   position: absolute; top: 2px; right: 6px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
   background: var(--paper); border: 2px solid var(--ink); font-weight: 900; font-size: 13px; line-height: 1;
@@ -168,6 +175,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
 }
 .bench-chip:hover .bench-x, .bench-chip:focus-visible .bench-x { opacity: 1; }
 .plush-slot { position: relative; display: inline-block; flex: none; }
+.plush-slot[data-plush-ready="true"] > svg { visibility: hidden; }
 .plush-view { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }
 
 .staples {
@@ -306,4 +314,65 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .bench-list--high-five .bench-chip, .chef-hat, .cook * { animation: none !important; }
 }
+
+.effects-toggle { flex-shrink: 0; }
+.card-dish { position: relative; }
+.chef-hat { position: absolute; top: -16px; left: 50%; translate: -50% 0; z-index: 1; animation: hat-land .5s ease-out both; }
+.bench-list--high-five .bench-chip { animation: high-five-right .9s ease-in-out 2; }
+.bench-list--high-five .bench-item:nth-child(even) .bench-chip { animation-name: high-five-left; }
+.app--lite .bench-list--high-five .bench-chip { animation: hop .4s ease-out 1; }
+.app--lite .chef-hat { animation: none; }
+
+@keyframes high-five-right {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  35% { translate: 6px -18px; rotate: 10deg; }
+  55% { translate: 10px -6px; rotate: 14deg; }
+  75% { translate: 0 -8px; rotate: 0deg; }
+}
+@keyframes high-five-left {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  35% { translate: -6px -18px; rotate: -10deg; }
+  55% { translate: -10px -6px; rotate: -14deg; }
+  75% { translate: 0 -8px; rotate: 0deg; }
+}
+@keyframes hop { 50% { translate: 0 -10px; } }
+@keyframes hat-land {
+  from { translate: -50% -24px; opacity: 0; }
+  60% { translate: -50% 2px; opacity: 1; }
+  to { translate: -50% 0; }
+}
+
+.cook-row { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 12px 0; }
+.cook-btn { font-size: 16px; padding: 8px 22px; }
+.cook { position: relative; width: 220px; height: 170px; }
+.cook-tool { position: absolute; left: 10px; bottom: 26px; }
+.cook-food { position: absolute; left: 0; right: 0; bottom: 70px; display: flex; justify-content: center; z-index: 1; }
+.cook-food > span { margin: 0 -5px; animation: cook-toss .7s ease-in-out calc(var(--i) * 60ms) 2 both; }
+.cook--pot .cook-food > span, .cook--oven .cook-food > span { animation: cook-drop .8s ease-in calc(var(--i) * 90ms) both; }
+.cook--oven .cook-food { bottom: 50px; }
+.cook--bowl .cook-food > span { animation: cook-land .5s ease-out calc(var(--i) * 80ms) both; }
+.cook-caption { position: absolute; bottom: 0; left: 0; right: 0; margin: 0; text-align: center; font-weight: 800; }
+.cook-flame { animation: cook-flicker .3s ease-in-out infinite alternate; }
+.cook-steam { animation: cook-rise 1.2s ease-out infinite; }
+.cook-glow { animation: cook-glow 1.2s ease-in-out .6s infinite alternate; }
+.app--lite .cook-food > span { animation: cook-land .35s ease-out both; }
+.app--lite .cook-flame, .app--lite .cook-steam, .app--lite .cook-glow { animation: none; }
+
+@keyframes cook-toss {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  50% { translate: 0 -64px; rotate: 180deg; }
+}
+@keyframes cook-drop {
+  from { translate: 0 -70px; opacity: 0; }
+  40% { opacity: 1; }
+  to { translate: 0 30px; scale: .6; opacity: 0; }
+}
+@keyframes cook-land {
+  from { translate: 0 -50px; opacity: 0; }
+  to { translate: 0 0; opacity: 1; }
+}
+@keyframes cook-flicker { to { opacity: .4; translate: 0 2px; } }
+@keyframes cook-rise { from { opacity: .9; translate: 0 0; } to { opacity: 0; translate: 0 -12px; } }
+@keyframes cook-glow { to { fill: #FF8A5C; } }

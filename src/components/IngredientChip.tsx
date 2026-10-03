@@ -1,10 +1,10 @@
-import { motion, useReducedMotion } from 'motion/react';
+import { motion, useDragControls, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 import { KawaiiFood } from '../assets/KawaiiFood';
 import type { Ingredient, Mood } from '../lib/types';
 import { useKitchen } from '../state/KitchenContext';
 import { anchors, insideBench } from '../state/dom';
-import { PlushSlot } from '../three/PlushSlot';
+import { DRAG_THRESHOLD, DragGesture } from '../state/drag';
 
 interface Props {
   ing: Ingredient;
@@ -14,10 +14,11 @@ interface Props {
 }
 
 export function IngredientChip({ ing, index, frosty = false }: Props) {
-  const { state, add, remove } = useKitchen();
+  const { state, add, remove, setDraggingId } = useKitchen();
   const reduce = useReducedMotion();
   const ref = useRef<HTMLButtonElement>(null);
-  const dragged = useRef(false);
+  const gesture = useRef(new DragGesture());
+  const dragControls = useDragControls();
   const [hover, setHover] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [shock, setShock] = useState(false);
@@ -31,6 +32,10 @@ export function IngredientChip({ ing, index, frosty = false }: Props) {
       if (anchors.chips.get(ing.id) === el) anchors.chips.delete(ing.id);
     };
   }, [ing.id]);
+
+  useEffect(() => () => {
+    setDraggingId((id) => id === ing.id ? null : id);
+  }, [ing.id, setDraggingId]);
 
   useEffect(() => {
     if (!shock) return;
@@ -54,28 +59,47 @@ export function IngredientChip({ ing, index, frosty = false }: Props) {
       aria-label={onBench ? `${ing.name} is on the bench. Press to put it back` : `Add ${ing.name} to bench`}
       aria-pressed={onBench}
       drag={!onBench}
+      dragControls={dragControls}
+      dragListener={false}
       dragSnapToOrigin
       dragElastic={0.15}
       dragMomentum={false}
       whileDrag={{ scale: 1.12, rotate: 4, zIndex: 40 }}
       whileHover={reduce ? undefined : { y: -3 }}
-      whileTap={{ scale: 0.94 }}
       onHoverStart={() => setHover(true)}
       onHoverEnd={() => setHover(false)}
-      onDragStart={() => {
-        dragged.current = true;
-        setDragging(true);
+      onPointerDown={(event) => {
+        if (!event.isPrimary || event.button !== 0) return;
+        gesture.current.begin({ x: event.clientX, y: event.clientY });
+        if (!onBench) dragControls.start(event, { distanceThreshold: DRAG_THRESHOLD });
       }}
-      onDragEnd={(_, info) => {
+      onPointerMoveCapture={(event) => {
+        if (event.isPrimary && event.buttons === 1) gesture.current.move({ x: event.clientX, y: event.clientY });
+      }}
+      onPointerUpCapture={(event) => {
+        if (event.isPrimary) gesture.current.move({ x: event.clientX, y: event.clientY });
+      }}
+      onPointerCancel={() => {
         setDragging(false);
-        if (insideBench(info.point.x - window.scrollX, info.point.y - window.scrollY)) add(ing.id, ref.current);
+        setDraggingId(null);
+      }}
+      onDragStart={(event) => {
+        const point = 'changedTouches' in event ? event.changedTouches[0] : event;
+        if (point) gesture.current.move({ x: point.clientX, y: point.clientY });
+        setDragging(true);
+        setDraggingId(ing.id);
+      }}
+      onDragEnd={(event) => {
+        setDragging(false);
+        setDraggingId(null);
+        if (event.type === 'pointercancel') return;
+        const point = 'changedTouches' in event ? event.changedTouches[0] : event;
+        if (!point) return;
+        if (insideBench(point.clientX, point.clientY)) add(ing.id, ref.current);
         else setShock(true);
       }}
-      onClick={() => {
-        if (dragged.current) {
-          dragged.current = false;
-          return;
-        }
+      onClick={(event) => {
+        if (event.detail !== 0 && gesture.current.dragged) return;
         toggle();
       }}
       initial={{ opacity: 0, scale: 0.6, y: 8 }}
@@ -95,11 +119,7 @@ export function IngredientChip({ ing, index, frosty = false }: Props) {
         animate={reduce || dragging ? { scale: 1 } : { scale: [1, 1.015, 1] }}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: (index % 7) * 0.3 }}
       >
-        {dragging ? (
-          <PlushSlot id={ing.id} mood="excited" size={60} />
-        ) : (
-          <KawaiiFood id={ing.id} mood={mood} size={60} shelf={!onBench && !!ing.shelfAsset} />
-        )}
+        <KawaiiFood id={ing.id} mood={mood} size={60} shelf={!dragging && !onBench && !!ing.shelfAsset} />
       </motion.span>
       <span className="chip-name">{ing.name}</span>
       {onBench && (

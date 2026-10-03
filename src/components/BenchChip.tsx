@@ -31,6 +31,7 @@ export const BenchChip = forwardRef<HTMLLIElement, Props>(function BenchChip({ i
     const dx = from.left + from.width / 2 - (to.left + to.width / 2);
     const dy = from.top + from.height / 2 - (to.top + to.height / 2);
     const apex = Math.min(dy, 0) - 48;
+    let active = true;
     controls.set({ x: dx, y: dy, opacity: 1, scale: 0.9 });
     void controls
       .start({
@@ -40,19 +41,23 @@ export const BenchChip = forwardRef<HTMLLIElement, Props>(function BenchChip({ i
         transition: { duration: 0.46, ease: ['easeOut', 'easeIn'], times: [0, 0.45, 1] },
       })
       .then(() => {
+        if (!active) return;
         setMood('bliss');
         setLanded((n) => n + 1);
         return controls.start({ scaleY: [1, 0.72, 1.08, 1], scaleX: [1, 1.18, 0.96, 1], scale: 1, transition: { duration: 0.38 } });
       });
+    return () => {
+      active = false;
+      controls.stop();
+    };
   }, [controls, flights, ing.id, reduce]);
 
   useEffect(() => {
     if (!celebrating) return;
     setMood('excited');
-    if (!reduce) void controls.start({ y: [0, -18, 0, -8, 0], transition: { duration: 0.9, repeat: 1 } });
     const t = setTimeout(() => setMood('bliss'), 1500);
     return () => clearTimeout(t);
-  }, [celebrating, controls, reduce]);
+  }, [celebrating]);
 
   const back = () => {
     setMood('shock');
@@ -93,7 +98,6 @@ export const BenchChip = forwardRef<HTMLLIElement, Props>(function BenchChip({ i
         onClick={back}
         aria-label={`Put ${ing.name} back`}
         whileHover={reduce ? undefined : { y: -4, rotate: -3 }}
-        whileTap={{ scale: 0.92 }}
       >
         <PlushSlot id={ing.id} mood={mood} size={68} landed={landed} />
         <span className="chip-name">{ing.name}</span>
