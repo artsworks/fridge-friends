@@ -74,6 +74,7 @@ Vite keeps the WebGL bundle separate from the default SVG bundle. The deployment
 
 Geometry, hulls, merged models, toon materials and face textures use page-lifetime caches bounded by the authored models, colors and moods.
 Individual face materials belong to their mesh and are disposed when the mesh unmounts.
+Ingredient buttons use native clicks and CSS press feedback, without Motion press listeners that accumulate blur handlers on repeated activation.
 Animation frames, context-loss listeners and timers are canceled on cleanup. Canvas teardown releases the renderer and WebGL context.
 
 The renderer follows [R3F performance guidance](https://r3f.docs.pmnd.rs/advanced/scaling-performance),

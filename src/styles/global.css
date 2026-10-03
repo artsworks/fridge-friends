@@ -125,6 +125,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
   touch-action: none; -webkit-tap-highlight-color: transparent;
 }
 .chip:hover { background: rgba(255, 201, 209, .35); }
+.chip:not(.chip--dragging):active { scale: .94; }
 .chip--dragging { cursor: grabbing; }
 .chip--picked { opacity: .55; cursor: pointer; }
 .chip--picked:hover { opacity: .8; }
@@ -166,6 +167,7 @@ h3 { font-size: 14px; margin: 14px 0 6px; }
   background: transparent; border: 0; border-radius: 16px; cursor: pointer;
 }
 .bench-chip:hover { background: rgba(255, 255, 255, .6); }
+.bench-chip:active { scale: .92; }
 .bench-x {
   position: absolute; top: 2px; right: 6px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
   background: var(--paper); border: 2px solid var(--ink); font-weight: 900; font-size: 13px; line-height: 1;

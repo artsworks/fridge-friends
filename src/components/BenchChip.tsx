@@ -99,7 +99,6 @@ export const BenchChip = forwardRef<HTMLLIElement, Props>(function BenchChip({ i
         onClick={back}
         aria-label={`Put ${ing.name} back`}
         whileHover={reduce ? undefined : { y: -4, rotate: -3 }}
-        whileTap={{ scale: 0.92 }}
       >
         <PlushSlot id={ing.id} mood={mood} size={68} landed={landed} />
         <span className="chip-name">{ing.name}</span>

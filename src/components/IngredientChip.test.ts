@@ -46,6 +46,13 @@ beforeEach(() => {
 afterEach(() => { anchors.bench = null; });
 
 describe('ingredient gestures', () => {
+  it('keeps press activation native instead of mounting Motion press listeners', () => {
+    expect(probe.button?.type).toBe('button');
+    expect(probe.button?.whileTap).toBeUndefined();
+    expect(probe.button?.onTap).toBeUndefined();
+    expect(probe.button?.onClick).toBeTypeOf('function');
+  });
+
   it('starts Motion with an eight-pixel threshold and accepts a micro-drag tap', () => {
     const button = probe.button!;
     button.onPointerDown?.(pointer(100, 100));

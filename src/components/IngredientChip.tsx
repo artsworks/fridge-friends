@@ -66,7 +66,6 @@ export function IngredientChip({ ing, index, frosty = false }: Props) {
       dragMomentum={false}
       whileDrag={{ scale: 1.12, rotate: 4, zIndex: 40 }}
       whileHover={reduce ? undefined : { y: -3 }}
-      whileTap={{ scale: 0.94 }}
       onHoverStart={() => setHover(true)}
       onHoverEnd={() => setHover(false)}
       onPointerDown={(event) => {
